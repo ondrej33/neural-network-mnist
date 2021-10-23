@@ -1,7 +1,9 @@
 #include <algorithm>    // std::reverse
 #include <iostream>     // std::cout
 
+#include "main.hpp"
 #include "../include/neural_network.hpp"
+
 
 
 /**

@@ -45,6 +45,12 @@ public:
         *this = *this * scalar;
         return *this;
     }
+    // Dot product
+    DoubleVec& operator*=(DoubleVec other)
+    {
+        *this = *this * other;
+        return *this;
+    }
 
     DoubleVec& operator/=(double scalar)
     {
@@ -66,10 +72,12 @@ public:
     std::vector<double>::const_iterator begin() const { return _vec.begin(); }
     std::vector<double>::const_iterator end() const { return _vec.end(); }
 
+    void compareSizes(const DoubleVec& other) const;
+
 };
 
 DoubleVec operator-(DoubleVec vec)
-{
+{   
     for (int i = 0; i < vec._vec.size(); i++) {
         vec._vec[i] *= -1;
     }
@@ -78,6 +86,7 @@ DoubleVec operator-(DoubleVec vec)
 
 DoubleVec operator+(DoubleVec first, const DoubleVec& second)
 {
+    first.compareSizes(second);
     for (int i = 0; i < first._vec.size(); i++) {
         first._vec[i] += second._vec[i];
     }
@@ -86,6 +95,7 @@ DoubleVec operator+(DoubleVec first, const DoubleVec& second)
 
 DoubleVec operator-(DoubleVec first, const DoubleVec& second)
 {
+    first.compareSizes(second);
     for (int i = 0; i < first._vec.size(); i++) {
         first._vec[i] -= second._vec[i];
     }
@@ -94,6 +104,7 @@ DoubleVec operator-(DoubleVec first, const DoubleVec& second)
 
 double operator*(const DoubleVec& first, const DoubleVec& second)
 {
+    first.compareSizes(second);
     double result = 0;
     for (int i = 0; i < first._vec.size(); i++) {
         result += first._vec[i] * second._vec[i];
@@ -115,4 +126,18 @@ DoubleVec operator/(DoubleVec vec, double scalar)
         vec._vec[i] /= scalar;
     }
     return vec;
+}
+
+/**
+ * @brief Check if the another vector is of the same length as ours
+ *      Can be remuved during production, just make this function empty and
+ *      compiler will do the rest (Preferably by DEBUG macro )
+ * @param other 
+ */
+void DoubleVec::compareSizes(const DoubleVec& other) const {  
+    #ifdef DEBUG
+    if (size() != other.size()) {
+        throw std::length_error("Vectors have different length");
+    }    
+    #endif
 }
