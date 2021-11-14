@@ -35,8 +35,10 @@
 *.zip
 *.rar
 
-# data
+# data and evaluators
 data/
+java_evaluator/
+python_evaluator/
 
 build
 
