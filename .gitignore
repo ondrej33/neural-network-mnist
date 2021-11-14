@@ -31,8 +31,12 @@
 *.out
 *.app
 
+# archives
 *.zip
 *.rar
+
+# data
+data/
 
 build
 

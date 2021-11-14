@@ -1,9 +1,8 @@
 #include <algorithm>    // std::reverse
 #include <iostream>     // std::cout
 
-#include "main.hpp"
+#include "../include/main.hpp"
 #include "../include/neural_network.hpp"
-
 
 
 /**
@@ -23,11 +22,11 @@ void print_neurons(std::vector<DoubleVec> neurons)
 }
 
 int main() {
-    // Simple neural network:  N1 -> N2 -> N3
-    NeuralNetwork nw(std::vector<int>{1,1,1}, sigmoid, 0.5);
+    // Simple neural network:  [N00, N01] -> [N10, N11] -> N3
+    NeuralNetwork nw(std::vector<int>{1,2,1}, sigmoid, 0.5);
 
-    // Give it input '1'
-    nw.feed_input(DoubleVec(std::vector<double>{1}));
+    // Give it input, now it is just '1'
+    nw.feed_input(DoubleVec(std::vector<double>{1.0}));
 
     std::cout << "WEIGHTS:\n";
     nw.print_weights();

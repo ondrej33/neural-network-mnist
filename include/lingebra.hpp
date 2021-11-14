@@ -130,7 +130,7 @@ DoubleVec operator/(DoubleVec vec, double scalar)
 
 /**
  * @brief Check if the another vector is of the same length as ours
- *      Can be remuved during production, just make this function empty and
+ *      Can be removed during production, just make this function empty and
  *      compiler will do the rest (Preferably by DEBUG macro )
  * @param other 
  */
