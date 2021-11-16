@@ -19,6 +19,8 @@ public:
 
     int size() const { return _vec.size(); }
     bool empty() const { return _vec.empty(); }
+    void push_back(double num) { _vec.push_back(num); }
+    void pop_back(double num) { _vec.pop_back(); }
 
     friend DoubleVec operator-(DoubleVec vec);
     friend DoubleVec operator+(DoubleVec first, const DoubleVec& second);
