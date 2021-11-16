@@ -48,6 +48,24 @@ std::vector<std::unique_ptr<DoubleVec>> get_inputs(std::string file_name, int nu
     return data;
 }
 
+// Loads labels from given file
+// TODO: maybe load just some of the lines? (same as for input loading)
+std::unique_ptr<DoubleVec> get_labels(std::string file_name) {
+    std::ifstream infile(file_name);
+    std::unique_ptr<DoubleVec> data;
+    // TODO: initialize vec size so that it does not have to allocate all the time
+    auto vec_ptr = std::make_unique<DoubleVec>();
+    for (double num; infile >> num;) {
+        vec_ptr->push_back(num);    
+
+        if (infile.peek() == '\n') {
+            infile.ignore();
+        }
+    }
+    return vec_ptr;
+}
+
+
 int main() {
     // Simple neural network:  [N00, N01] -> [N10, N11] -> N3
     NeuralNetwork nw(std::vector<int>{1,2,1}, sigmoid, 0.5);
