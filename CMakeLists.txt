@@ -12,5 +12,5 @@ project(PV021-Project VERSION 1.0
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 
-add_executable(main src/main.cpp include/main.hpp include/lingebra.hpp include/neural_network.hpp include/activation_fns.hpp include/error_fns.hpp include/labels.hpp
+add_executable(main src/main.cpp include/main.hpp include/lingebra.hpp include/neural_network.hpp include/activation_fns.hpp include/error_fns.hpp
 )

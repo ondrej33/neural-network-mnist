@@ -122,7 +122,7 @@ public:
         return derivations;
     }
 
-    // Compute derivations of Error_k wrt. every weight w_ji using derivations wrt. neuron values
+    // Compute derivations of Error_k wrt. every weight w_ji using known derivations wrt. neuron values
     // return derivation values for all weights, arranged by [layers][from][to]
     std::vector<std::vector<DoubleVec>> get_weight_derivations_sigmoid(
         std::vector<DoubleVec> neuron_values, std::vector<DoubleVec> neuron_derivations)
