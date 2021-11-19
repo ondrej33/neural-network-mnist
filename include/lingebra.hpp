@@ -168,30 +168,30 @@ public:
     explicit DoubleMat(const std::vector<DoubleVec> &rows) : _matrix_rows(rows) {}
     explicit DoubleMat(const std::vector<DoubleVec> &&rows) : _matrix_rows(std::move(rows)) {}
 
-    int row_size() const
+    int row_num() const
     { return _matrix_rows.size(); }
 
-    int col_size() const
-    { return (row_size() == 0) ? 0 : _matrix_rows[0].size(); }
+    int col_num() const
+    { return (row_num() == 0) ? 0 : _matrix_rows[0].size(); }
 
     bool same_dimensions(const DoubleMat &other) const
-    { return col_size() == other.col_size() && row_size() == other.row_size(); }
+    { return col_num() == other.col_num() && row_num() == other.row_num(); }
 
     /* Direct access to the COPY of column and row vectors
      * The ‹n› is index from top (row) or left (column) */
 
     DoubleVec row( int n ) const
     { 
-        assert(n >= 0 && n <= row_size() - 1);
+        assert(n >= 0 && n <= row_num() - 1);
         return _matrix_rows[n];
     }
 
     DoubleVec col( int n ) const
     {
-        assert(n >= 0 && col_size() >= n + 1);
+        assert(n >= 0 && col_num() >= n + 1);
 
-        DoubleVec column(row_size());
-        for (int i = 0; i < row_size(); i++) {
+        DoubleVec column(row_num());
+        for (int i = 0; i < row_num(); i++) {
             column[i] = _matrix_rows[i][n];
         }
         return column;
@@ -207,13 +207,13 @@ public:
     /* constant / non-constant indexing to get or change the row vectors */
     DoubleVec operator[](int n) const
     { 
-        assert(n >= 0 && n <= row_size() - 1);
+        assert(n >= 0 && n <= row_num() - 1);
         return _matrix_rows[n]; 
     }
 
     DoubleVec &operator[](int n)
     { 
-        assert(n >= 0 && n <= row_size() - 1);
+        assert(n >= 0 && n <= row_num() - 1);
         return _matrix_rows[n]; 
     }
 
@@ -221,7 +221,7 @@ public:
     DoubleMat &operator+=(const DoubleMat &other)
     {        
         assert(same_dimensions(other));
-        for (int i = 0; i < row_size(); i++) {
+        for (int i = 0; i < row_num(); i++) {
             _matrix_rows[i] += other._matrix_rows[i];
         }
         return *this;
@@ -230,7 +230,7 @@ public:
     DoubleMat &operator-=(const DoubleMat &other)
     {
         assert(same_dimensions(other));
-        for (int i = 0; i < row_size(); i++) {
+        for (int i = 0; i < row_num(); i++) {
             _matrix_rows[i] -= other._matrix_rows[i];
         }
         return *this;
@@ -239,7 +239,7 @@ public:
     /* multiplying by a scalar */
     DoubleMat &operator*=(const double &scal)
     {
-        for (int i = 0; i < row_size(); i++) {
+        for (int i = 0; i < row_num(); i++) {
             _matrix_rows[i] *= scal;
         }
         return *this;
@@ -250,12 +250,30 @@ public:
     /* get a transpose of the matrix */
     DoubleMat transpose() const
     {
-        auto transp = DoubleMat(col_size(), row_size());
-        for (int i = 0; i < col_size(); i++) {
+        auto transp = DoubleMat(col_num(), row_num());
+        for (int i = 0; i < col_num(); i++) {
             transp[i] = col(i);
         }
         return transp;
     }
+
+    /* iterators */
+    std::vector<DoubleVec>::iterator begin() { return _matrix_rows.begin(); }
+    std::vector<DoubleVec>::iterator end() { return _matrix_rows.end(); }
+
+    std::vector<DoubleVec>::const_iterator begin() const { return _matrix_rows.begin(); }
+    std::vector<DoubleVec>::const_iterator end() const { return _matrix_rows.end(); }
+
+    /* adds given vector to all rows */
+    DoubleMat &add_vec_to_all_rows(const DoubleVec &vec)
+    {        
+        assert(vec.size() == col_num());
+        for (int i = 0; i < row_num(); i++) {
+            _matrix_rows[i] += vec;
+        }
+        return *this;
+    }
+
 };
 
 
@@ -273,25 +291,27 @@ DoubleMat operator*(DoubleMat v, double scalar)
 DoubleMat operator*(double scalar, DoubleMat v)
 { return v *= scalar; }
 
-/* multiplication of a vector by a matrix - both sides */
-DoubleVec operator*(const DoubleMat &m, DoubleVec v)
+/* multiplication of a vector by a matrix - both sides 
+ * if vector is first param, it is considered as [1, n] matrix
+ * if vector is second param, it is considered as [n,1] matrix */
+DoubleVec operator*(DoubleVec v, const DoubleMat &m)
 { 
-    assert(m.col_size() == v.size());
-    auto result = DoubleVec(m.row_size());
+    assert(m.row_num() == v.size());
+    auto result = DoubleVec(m.col_num());
 
-    for (int i = 0; i < m.row_size(); i++) {
-        result[i] = m.row(i) * v;
+    for (int i = 0; i < m.col_num(); i++) {
+        result[i] = v * m.col(i);
     }
     return result;
 }
 
-DoubleVec operator*(DoubleVec v, const DoubleMat &m)
+DoubleVec operator*(const DoubleMat &m, DoubleVec v)
 { 
-    assert(m.row_size() == v.size());
-    auto result = DoubleVec(m.col_size());
+    assert(m.col_num() == v.size());
+    auto result = DoubleVec(m.row_num());
 
-    for (int i = 0; i < m.col_size(); i++) {
-        result[i] = v * m.col(i);
+    for (int i = 0; i < m.row_num(); i++) {
+        result[i] = m.row(i) * v;
     }
     return result;
 }
@@ -299,12 +319,12 @@ DoubleVec operator*(DoubleVec v, const DoubleMat &m)
 /* multiplication of compatible matrices */
 DoubleMat operator*(const DoubleMat &first, const DoubleMat &second)
 { 
-    assert(first.col_size() == second.row_size());
-    auto result = DoubleMat(first.row_size(), second.col_size());
+    assert(first.col_num() == second.row_num());
+    auto result = DoubleMat(first.row_num(), second.col_num());
 
     // TODO - check if ok
-    for (int i = 0; i < first.col_size(); i++) {
-        for (int j = 0; j < first.col_size(); j++) {
+    for (int i = 0; i < first.col_num(); i++) {
+        for (int j = 0; j < first.col_num(); j++) {
             result[i][j] = first.row(i) * second.col(j);
         }
     }
@@ -316,8 +336,8 @@ inline void print_matrix(const DoubleMat &m)
 {
     std::cout << std::setprecision(4) << std::fixed;
 
-    for (int i = 0; i < m.row_size(); i++) {
-       for (int j = 0; j < m.col_size(); j++) {
+    for (int i = 0; i < m.row_num(); i++) {
+       for (int j = 0; j < m.col_num(); j++) {
             std::cout << m[i][j] << " ";
         }
         std::cout << "\n";

@@ -8,22 +8,6 @@
 #include "../include/neural_network.hpp"
 
 
-/**
- * Prints values of all neurons, one layer a line
- * Output layer is printed at the top, input at the bottom
- */
-void print_neurons(std::vector<DoubleVec> neurons)
-{
-    std::reverse(neurons.begin(), neurons.end());
-    for (const auto& layer: neurons) {
-        for (const auto& neuron: layer) {
-            std::cout << neuron << " | ";
-        }
-        std::cout << "\n";
-    }
-    std::cout << "\n";
-}
-
 // Loads inputs from given file, arranges by lines, one line must contain "nums_per_line" numbers
 // TODO: maybe load just some of the lines?
 std::vector<std::unique_ptr<DoubleVec>> get_inputs(std::string file_name, int nums_per_line) {
@@ -67,17 +51,17 @@ std::unique_ptr<DoubleVec> get_labels(std::string file_name) {
 
 
 int main() {
-    // Simple neural network:  [N00, N01] -> [N10, N11] -> N3
-    NeuralNetwork nw(std::vector<int>{1,2,1}, sigmoid, 0.5);
+    // Simple neural network:  [N00, N01] -> [N10, N11] -> N2
+    NeuralNetwork nw(std::vector<int>{2,2,1}, 0.5);
 
-    // Give it input, now it is just '1'
-    nw.feed_input(DoubleVec(std::vector<double>{1.0}));
+    // Give it input, just two '1'
+    nw.feed_input(DoubleVec(std::vector<double>{1.0, 1.0}));
 
     std::cout << "WEIGHTS:\n";
     nw.print_weights();
 
     std::cout << "NEURONS:\n";
-    print_neurons(nw.eval_network());
-
+    nw.forward_pass();
+    nw.print_neurons();
     return 0;
 }
