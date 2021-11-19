@@ -15,8 +15,8 @@ class Layer
      * we choose this shape, so that we wont have to transpose every time during forward pass*/
     DoubleMat _weights_in;
 
-    /* Output values of each neuron */
-    DoubleVec _output_values;
+    /* Matrix where each row contains >output value of each neuron, for one batch input< */
+    DoubleMat _output_values;
 
     /* Biases of each neuron */
     DoubleVec _biases;
@@ -27,9 +27,9 @@ class Layer
     friend NeuralNetwork;
 
 public:
-    Layer(int num_neurons, int num_neurons_prev_layer, ActivationFunction& fn)
+    Layer(int batch_size, int num_neurons, int num_neurons_prev_layer, ActivationFunction& fn)
         : _weights_in(num_neurons_prev_layer, num_neurons),
-          _output_values(num_neurons),
+          _output_values(batch_size, num_neurons),
           _biases(num_neurons),
           _activation_fn(fn)
     {
@@ -37,6 +37,7 @@ public:
         // TODO: initialize biases? how
         
         // initiate weights - we use some kind of Xavier initialization for now
+        // TODO: different seed for every layer
         std::default_random_engine generator;
         std::normal_distribution<double> distribution(0.0, 1.0 / num_neurons);  // values have to be 0.0 and 1.0
 
@@ -47,22 +48,23 @@ public:
         }
     }
 
-    /* getters */
-    DoubleVec get_outputs() const { return _output_values; }
+    /* getters for vectors, might be useful */
+    DoubleMat get_outputs() const { return _output_values; }
     DoubleMat get_weights() const { return _weights_in; }
     DoubleVec get_biases() const { return _biases; }
 
 
-    /* Take vector of inputs (outputs from prev layer) and use them to compute outputs */
-    void forward(const DoubleVec& input_vec)
+    /* Take matrix, where each row is input vector, together batch_size inputs
+     * input vector contains outputs from prev layer and we use them to compute our outputs */
+    void forward(const DoubleMat& input_batch)
     {
         // first compute inner potential, then apply activation fn
-        _output_values = _biases + input_vec * _weights_in;
+        _output_values = (input_batch * _weights_in).add_vec_to_all_rows(_biases);
         _activation_fn.apply_activation(_output_values);
     }
 
     /* TODO */
-    void backward(const DoubleVec& input_vec)
+    void backward(const DoubleMat& input_batch)
     {
         // TODO
     }

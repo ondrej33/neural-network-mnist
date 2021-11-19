@@ -54,26 +54,23 @@ int main() {
     std::vector<int> topology{2,2,2};
     double learn_rate = 0.5;
     int num_epochs = 20;
-    NeuralNetwork nw(topology, learn_rate, num_epochs);
+    int batch_size = 4;
+    NeuralNetwork nw(topology, learn_rate, num_epochs, batch_size);
 
     std::cout << "INITIAL_WEIGHTS:\n";
     nw.print_weights();
 
     // Try it on some inputs
-    nw.feed_input(DoubleVec(std::vector<double>{1.0, 1.0}));
-    std::cout << "NEURONS:\n";
+    nw.feed_input(DoubleMat(std::vector<DoubleVec>{
+        DoubleVec(std::vector<double>{1.0, 1.0}),
+        DoubleVec(std::vector<double>{0.0, 0.0}),
+        DoubleVec(std::vector<double>{0.0, 1.0}),
+        DoubleVec(std::vector<double>{1.0, 1.0}),
+    }));
+
+    std::cout << "NEURONS for [(1,1), (0,0), (0,1)]:\n";
     nw.forward_pass();
     nw.print_neurons();
 
-    nw.feed_input(DoubleVec(std::vector<double>{0.0, 0.0}));
-    std::cout << "NEURONS:\n";
-    nw.forward_pass();
-    nw.print_neurons();
-
-    nw.feed_input(DoubleVec(std::vector<double>{0.0, 1.0}));
-    std::cout << "NEURONS:\n";
-    nw.forward_pass();
-    nw.print_neurons();
-    
     return 0;
 }

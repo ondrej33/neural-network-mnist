@@ -14,50 +14,52 @@ class NeuralNetwork
     std::vector<int> _topology;
 
     /* vector of current inputs (might be matrix someday) */
-    DoubleVec _input;
+    DoubleMat _input_batch;
 
     /* vector of hidden and output layers */
     std::vector<std::unique_ptr<Layer>> _layers;
 
     double _learn_rate;
     int _num_epochs;
+    int _batch_size;
     ReluFunction relu_fn = ReluFunction();
     SoftmaxFunction soft_fn = SoftmaxFunction();
 
 
 public:
-    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate, int num_epochs)
+    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate, int num_epochs, int batch_size)
             : _topology(layer_sizes), 
-              _input(layer_sizes[0]),
+              _input_batch(batch_size, layer_sizes[0]),
               _learn_rate(learn_rate),
-              _num_epochs(num_epochs)
+              _num_epochs(num_epochs),
+              _batch_size(batch_size)
     {
         assert(_topology.size() > 1);
 
         // we dont want to have explicit layer for inputs
         // and we will initiate last layer separately
         for (int i = 1; i < _topology.size() - 1; ++i) {
-            _layers.push_back(std::make_unique<Layer>(_topology[i], _topology[i-1], relu_fn));
+            _layers.push_back(std::make_unique<Layer>(_batch_size, _topology[i], _topology[i-1], relu_fn));
         }
         // last layer will have soft_max function
         _layers.push_back(std::make_unique<Layer>(
-            _topology[_topology.size() - 1], _topology[_topology.size()-2], soft_fn
+            _batch_size, _topology[_topology.size() - 1], _topology[_topology.size()-2], soft_fn
         ));
     }
 
-    /* Get new input value */
+    /* Get new input batch */
     // TODO - change this for batch loading
-    void feed_input(DoubleVec input_vec)
+    void feed_input(DoubleMat input_batch)
     {
-        assert(input_vec.size() == _topology[0]);
-        _input = input_vec;
+        assert(input_batch.col_num() == _topology[0] && input_batch.row_num() == _batch_size);
+        _input_batch = input_batch;
     }
 
     /* Evaluate all neuron layers bottom-up (from input layer to output) */
     void forward_pass()
     {
         // initial layer is input, so lets use it to initiate first
-        _layers[0]->forward(_input);
+        _layers[0]->forward(_input_batch);
 
         // now all other layers
         for (int i = 1; i < _layers.size(); ++i) {
@@ -138,11 +140,13 @@ public:
    /* TODO */
     void sgd_train_network()
     {
-        // TODO: random shuffle inputs? - but also the ouputs, so that they still correpond
-                // or choose N random indices for batch, this sounds OK
+        // TODO: random shuffle inputs at beginning? - but also the ouputs, so that they still correpond
+                // or choose N random indices for every batch, this sounds OK and EZ
         // TODO: also normalize inputs?
-        // TODO: for every epoch choose some random batch of inputs/labels to train on
+
         for (int i = 0; i < _num_epochs; i++) {
+            // TODO: for every epoch choose some random batch of inputs/labels to train on
+                // feed them in the network using feed_input
             one_epoch_sgd();
         }
     }
@@ -190,8 +194,15 @@ public:
     void print_neurons()
     {
         for (int i = _layers.size() - 1; i >= 0; --i) {
-            for (const auto& neuron: _layers[i]->get_outputs()) {
-                std::cout << neuron << " | ";
+            for (const auto& neuron_vec: _layers[i]->get_outputs()) {
+                std::cout << "[";
+                for (int j = 0; j < neuron_vec.size(); ++j) {
+                    std::cout << neuron_vec[j];
+                    if (j != neuron_vec.size() - 1) {
+                        std:: cout << " | ";
+                    }
+                }
+                std::cout << "]  ";
             }
             std::cout << "\n";
         }
