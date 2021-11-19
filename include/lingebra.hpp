@@ -323,8 +323,8 @@ DoubleMat operator*(const DoubleMat &first, const DoubleMat &second)
     auto result = DoubleMat(first.row_num(), second.col_num());
 
     // TODO - check if ok
-    for (int i = 0; i < first.col_num(); i++) {
-        for (int j = 0; j < first.col_num(); j++) {
+    for (int i = 0; i < first.row_num(); i++) {
+        for (int j = 0; j < second.col_num(); j++) {
             result[i][j] = first.row(i) * second.col(j);
         }
     }
