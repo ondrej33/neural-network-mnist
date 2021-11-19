@@ -1,7 +1,7 @@
 Máme klasifikační problém, tedy:
 - error funkce bude nějaká Cross entrophy
 - aktivační funkce pro output neurony Softmax
-- aktivační funkce pro hidden layers nejspíše Relu (nebo softmax - "smooth relu"), nebo možná sigmoid
+- aktivační funkce pro hidden layers nejspíše Relu (nebo softplus - "smooth relu"), nebo možná sigmoid (spíš ne)
 
 Implementační věci:
 - rozdělit trénovací data na train X validate a něco s tím dělat

@@ -9,7 +9,7 @@
 
 
 // Loads inputs from given file, arranges by lines, one line must contain "nums_per_line" numbers
-// TODO: maybe load just some of the lines?
+// TODO: maybe load them as >char< type? it is just numbers 0-255
 std::vector<std::unique_ptr<DoubleVec>> get_inputs(std::string file_name, int nums_per_line) {
     std::ifstream infile(file_name);
     std::vector<std::unique_ptr<DoubleVec>> data;
@@ -28,12 +28,11 @@ std::vector<std::unique_ptr<DoubleVec>> get_inputs(std::string file_name, int nu
         }
         data.push_back(std::move(vec_ptr)); // unique_ptr must be moved
     }
-
     return data;
 }
 
 // Loads labels from given file
-// TODO: maybe load just some of the lines? (same as for input loading)
+// TODO: maybe load them as >char< type? it is just numbers 0-9
 std::unique_ptr<DoubleVec> get_labels(std::string file_name) {
     std::ifstream infile(file_name);
     std::unique_ptr<DoubleVec> data;
@@ -51,17 +50,30 @@ std::unique_ptr<DoubleVec> get_labels(std::string file_name) {
 
 
 int main() {
-    // Simple neural network:  [N00, N01] -> [N10, N11] -> N2
-    NeuralNetwork nw(std::vector<int>{2,2,1}, 0.5);
+    // Simple neural network:  [N00, N01] -> [N10, N11] -> [N20, N21]
+    std::vector<int> topology{2,2,2};
+    double learn_rate = 0.5;
+    int num_epochs = 20;
+    NeuralNetwork nw(topology, learn_rate, num_epochs);
 
-    // Give it input, just two '1'
-    nw.feed_input(DoubleVec(std::vector<double>{1.0, 1.0}));
-
-    std::cout << "WEIGHTS:\n";
+    std::cout << "INITIAL_WEIGHTS:\n";
     nw.print_weights();
 
+    // Try it on some inputs
+    nw.feed_input(DoubleVec(std::vector<double>{1.0, 1.0}));
     std::cout << "NEURONS:\n";
     nw.forward_pass();
     nw.print_neurons();
+
+    nw.feed_input(DoubleVec(std::vector<double>{0.0, 0.0}));
+    std::cout << "NEURONS:\n";
+    nw.forward_pass();
+    nw.print_neurons();
+
+    nw.feed_input(DoubleVec(std::vector<double>{0.0, 1.0}));
+    std::cout << "NEURONS:\n";
+    nw.forward_pass();
+    nw.print_neurons();
+    
     return 0;
 }

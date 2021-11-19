@@ -20,15 +20,17 @@ class NeuralNetwork
     std::vector<std::unique_ptr<Layer>> _layers;
 
     double _learn_rate;
+    int _num_epochs;
     ReluFunction relu_fn = ReluFunction();
     SoftmaxFunction soft_fn = SoftmaxFunction();
 
 
 public:
-    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate)
+    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate, int num_epochs)
             : _topology(layer_sizes), 
               _input(layer_sizes[0]),
-              _learn_rate(learn_rate)
+              _learn_rate(learn_rate),
+              _num_epochs(num_epochs)
     {
         assert(_topology.size() > 1);
 
@@ -43,14 +45,15 @@ public:
         ));
     }
 
-    // Get new input value
+    /* Get new input value */
+    // TODO - change this for batch loading
     void feed_input(DoubleVec input_vec)
     {
         assert(input_vec.size() == _topology[0]);
         _input = input_vec;
     }
 
-    // Evaluate all neuron layers bottom-up (from input layer to output) 
+    /* Evaluate all neuron layers bottom-up (from input layer to output) */
     void forward_pass()
     {
         // initial layer is input, so lets use it to initiate first
@@ -60,6 +63,21 @@ public:
         for (int i = 1; i < _layers.size(); ++i) {
             _layers[i]->forward(_layers[i - 1]->_output_values);
         }
+    }
+
+    
+    /* Compute derivations wrt. neuron values using backpropagation */
+    /* TODO */
+    void backward_pass_values()
+    {
+
+    }
+
+    /* Compute derivations wrt. weights using derivations wrt. neuron values */
+    /* TODO */
+    void compute_gradient()
+    {
+
     }
 
     /*
@@ -117,7 +135,39 @@ public:
     }
     */
 
-    // Prints values of all weights, one layer a line, output layer is printed at the top, input at the bottom
+   /* TODO */
+    void sgd_train_network()
+    {
+        // TODO: random shuffle inputs? - but also the ouputs, so that they still correpond
+                // or choose N random indices for batch, this sounds OK
+        // TODO: also normalize inputs?
+        // TODO: for every epoch choose some random batch of inputs/labels to train on
+        for (int i = 0; i < _num_epochs; i++) {
+            one_epoch_sgd();
+        }
+    }
+
+   /* TODO */
+    void one_epoch_sgd()
+    {
+        /** TODO:
+         * receive batch of inputs + labels
+         *    transform labels to one hot vectors? or at least use them like that
+         * do a forward pass with this batch - compute potentials+outputs for each layer (for all batch items)
+         * backpropagate
+         *    compute derivations wrt. outputs (last layer ez, other use derivations)
+         *    compute derivations wrt. weights -> gradient
+         * change weights according to the gradient (subtract learn_rate * gradient)
+         *    and also add momentum - gradient in prev step, multiplied by some alpha from [0,1]
+         * 2 options - either implement learn rate decay (probably expnential?)
+         *           - or use RMSprop instead of it - individually adapting learning rate for each weight (computed from gradient)
+         */
+
+    }
+
+
+    /* Prints values of all weights, one layer a line
+     * output layer is printed at the top, input at the bottom */
     void print_weights() const
     {
         for (int i = _layers.size() - 1; i >= 0; --i) {
