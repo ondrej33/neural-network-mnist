@@ -5,11 +5,13 @@
 #include <memory>
 
 #include "layer.hpp"
-
+#include "input_loading.hpp"
 
 /* Main class representing neural network */
 class NeuralNetwork
 {
+    using DoubleVecPtr = std::unique_ptr<DoubleVec>;
+
     /* numbers of neurons for each layer */
     std::vector<int> _topology;
 
@@ -19,17 +21,28 @@ class NeuralNetwork
     /* vector of hidden and output layers */
     std::vector<std::unique_ptr<Layer>> _layers;
 
+    /* pointer to the data */
+    std::unique_ptr<std::vector<DoubleVecPtr>> _data_ptr = nullptr;
+
+    /* pointer to the labels */
+    DoubleVecPtr _labels_ptr = nullptr;
+
     double _learn_rate;
     int _num_epochs;
     int _batch_size;
+
     ReluFunction relu_fn = ReluFunction();
     SoftmaxFunction soft_fn = SoftmaxFunction();
 
-
 public:
-    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate, int num_epochs, int batch_size)
+    /* Creates object, >>consumes given data and label pointer<< 
+     * TODO: uncomment data loading, for now it just takes too long */
+    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate, int num_epochs, 
+        int batch_size, std::string data_file, std::string label_file)
             : _topology(layer_sizes), 
               _input_batch(batch_size, layer_sizes[0]),
+              //_data_ptr(std::move(get_inputs(data_file, batch_size))),
+              //_labels_ptr(std::move(get_labels(label_file))),
               _learn_rate(learn_rate),
               _num_epochs(num_epochs),
               _batch_size(batch_size)
@@ -45,6 +58,13 @@ public:
         _layers.push_back(std::make_unique<Layer>(
             _batch_size, _topology[_topology.size() - 1], _topology[_topology.size()-2], soft_fn
         ));
+    }
+
+    /* Puts new data and labels instead of old ones */
+    void change_data_and_labels(std::string data_file, std::string label_file)
+    {
+        _data_ptr = std::move(get_inputs(data_file, _batch_size));
+        _labels_ptr = std::move(get_labels(label_file));
     }
 
     /* Get new input batch */
@@ -174,6 +194,7 @@ public:
      * output layer is printed at the top, input at the bottom */
     void print_weights() const
     {
+        std::cout << std::setprecision(4) << std::fixed;
         for (int i = _layers.size() - 1; i >= 0; --i) {
             for (int j = 0; j < _layers[i]->_weights_in.col_num(); ++j) {
                 std::cout << "[ ";
@@ -193,6 +214,7 @@ public:
      */
     void print_neurons()
     {
+        std::cout << std::setprecision(4) << std::fixed;
         for (int i = _layers.size() - 1; i >= 0; --i) {
             for (const auto& neuron_vec: _layers[i]->get_outputs()) {
                 std::cout << "[";
