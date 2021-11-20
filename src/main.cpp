@@ -5,9 +5,9 @@
 
 int main() {
     // Simple neural network:  [N00, N01] -> [N10, N11] -> [N20, N21]
-    std::vector<int> topology{2,2,2};
-    double learn_rate = 0.5;
-    int num_epochs = 30;
+    std::vector<int> topology{2,8,2};
+    double learn_rate = 0.05;
+    int num_epochs = 1000;
     int batch_size = 4;
     std::string train_data_file = "data/fashion_mnist_train_vectors.csv";
     std::string train_labels_file = "data/fashion_mnist_train_labels.csv";
@@ -22,15 +22,31 @@ int main() {
     nw.feed_input(DoubleMat(std::vector<DoubleVec>{
         DoubleVec(std::vector<double>{1.0, 1.0}),
         DoubleVec(std::vector<double>{0.0, 0.0}),
+        DoubleVec(std::vector<double>{1.0, 0.0}),
         DoubleVec(std::vector<double>{0.0, 1.0}),
-        DoubleVec(std::vector<double>{1.0, 1.0}),
         }), 
-        std::vector<int>{0,0,1,0}
+        std::vector<int>{0,0,1,1}
     );
+    nw.train_network();
 
-    std::cout << "NEURONS for [(1,1), (0,0), (0,1), (1,1)]:\n";
+    // Try it on some inputs
+    nw.feed_input(DoubleMat(std::vector<DoubleVec>{
+        DoubleVec(std::vector<double>{1.0, 0.0}),
+        DoubleVec(std::vector<double>{0.0, 0.0}),
+        DoubleVec(std::vector<double>{0.0, 0.0}),
+        DoubleVec(std::vector<double>{0.0, 1.0}),
+        }), 
+        std::vector<int>{0,0,0,1}
+    );
+    std::cout << "NEURONS:\n";
     nw.forward_pass();
     nw.print_neurons();
 
+
+    /*
+    std::cout << "NEURONS for [(1,1), (0,0), (0,1), (1,1)]:\n";
+    nw.forward_pass();
+    nw.print_neurons();
+    */
     return 0;
 }

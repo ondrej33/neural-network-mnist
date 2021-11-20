@@ -34,23 +34,33 @@ public:
     friend double operator*(const DoubleVec& first, const DoubleVec& second);
 
     friend DoubleVec operator*(DoubleVec vec, double scalar);
+    friend DoubleVec operator*(double scalar, DoubleVec vec);
     friend DoubleVec operator/(DoubleVec vec, double scalar);
+    friend DoubleVec operator/(double scalar, DoubleVec vec);
 
     DoubleVec& operator+=(const DoubleVec& other)
     {
-        *this = *this + other;
+        this->compareSizes(other);
+        for (int i = 0; i < size(); i++) {
+            _vec[i] += other._vec[i];
+        }
         return *this;
     }
 
     DoubleVec& operator-=(const DoubleVec& other)
     {
-        *this = *this - other;
+        this->compareSizes(other);
+        for (int i = 0; i < size(); i++) {
+            _vec[i] -= other._vec[i];
+        }
         return *this;
     }
 
     DoubleVec& operator*=(double scalar)
     {
-        *this = *this * scalar;
+        for (int i = 0; i < size(); i++) {
+            _vec[i] *= scalar;
+        }
         return *this;
     }
 
@@ -58,7 +68,9 @@ public:
 
     DoubleVec& operator/=(double scalar)
     {
-        *this = *this / scalar;
+        for (int i = 0; i < size(); i++) {
+            _vec[i] /= scalar;
+        }
         return *this;
     }
 
@@ -87,6 +99,7 @@ public:
     void compareSizes(const DoubleVec& other) const;
 };
 
+/* unary minus */
 DoubleVec operator-(DoubleVec vec)
 {   
     for (int i = 0; i < vec._vec.size(); i++) {
@@ -95,24 +108,14 @@ DoubleVec operator-(DoubleVec vec)
     return vec;
 }
 
+/* matrix addition and subtraction */
 DoubleVec operator+(DoubleVec first, const DoubleVec& second)
-{
-    first.compareSizes(second);
-    for (int i = 0; i < first._vec.size(); i++) {
-        first._vec[i] += second._vec[i];
-    }
-    return first;
-}
+{ return first += second; }
 
 DoubleVec operator-(DoubleVec first, const DoubleVec& second)
-{
-    first.compareSizes(second);
-    for (int i = 0; i < first._vec.size(); i++) {
-        first._vec[i] -= second._vec[i];
-    }
-    return first;
-}
+{ return first -= second; }
 
+/* dot product */
 double operator*(const DoubleVec& first, const DoubleVec& second)
 {
     first.compareSizes(second);
@@ -123,21 +126,19 @@ double operator*(const DoubleVec& first, const DoubleVec& second)
     return result;
 }
 
+/* Multiplication and division by scalar */
 DoubleVec operator*(DoubleVec vec, double scalar)
-{
-    for (int i = 0; i < vec._vec.size(); i++) {
-        vec._vec[i] *= scalar;
-    }
-    return vec;
-}
+{ return vec *= scalar; }
+
+DoubleVec operator*(double scalar, DoubleVec vec)
+{ return vec *= scalar; }
 
 DoubleVec operator/(DoubleVec vec, double scalar)
-{
-    for (int i = 0; i < vec._vec.size(); i++) {
-        vec._vec[i] /= scalar;
-    }
-    return vec;
-}
+{ return vec /= scalar; }
+
+DoubleVec operator/(double scalar, DoubleVec vec)
+{ return vec /= scalar; }
+
 
 /**
  * @brief Check if the another vector is of the same length as ours
@@ -285,11 +286,11 @@ DoubleMat operator-(DoubleMat x, const DoubleMat &y)
 { return x -= y; }
 
 /* multiplication of a matrix by a scalar - both sides */
-DoubleMat operator*(DoubleMat v, double scalar)
-{ return v *= scalar; }
+DoubleMat operator*(DoubleMat m, double scalar)
+{ return m *= scalar; }
 
-DoubleMat operator*(double scalar, DoubleMat v)
-{ return v *= scalar; }
+DoubleMat operator*(double scalar, DoubleMat m)
+{ return m *= scalar; }
 
 /* multiplication of a vector by a matrix - both sides 
  * if vector is first param, it is considered as [1, n] matrix

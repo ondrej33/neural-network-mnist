@@ -67,6 +67,7 @@ public:
     DoubleVec get_biases() const { return _biases; }
 
     int batch_size() const { return _output_values.row_num(); }
+    int num_neurons() const { return _output_values.col_num(); }
 
     /* Take matrix, where each row is input vector, together batch_size inputs
      * input vector contains outputs from prev layer and we use them to compute our outputs */
@@ -90,7 +91,7 @@ public:
          * then we would mult it with incoming matrix from next layer.
          * We can instead just zero the values from next layer on indices, where inner_potential <= 0 */
         for (int i = 0; i < batch_size(); ++i) {
-            for (int j = 0; j < batch_size(); ++j) {
+            for (int j = 0; j < num_neurons(); ++j) {
                 if (_inner_potential[i][j] <= 0) {
                     deriv_inputs_next_layer[i][j] = 0;
                 }

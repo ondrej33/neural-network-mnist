@@ -73,11 +73,12 @@ public:
 
     /* Get new input batch and input labels */
     // TODO - change this for batch loading
-    void feed_input(DoubleMat input_batch, std::vector<int> _target_labels)
+    void feed_input(DoubleMat input_batch, std::vector<int> target_labels)
     {
         assert(input_batch.col_num() == _topology[0] && input_batch.row_num() == _batch_size);
+        assert(target_labels.size() == _batch_size);
         _input_batch = input_batch;
-        _target_labels = _target_labels;
+        _target_labels = target_labels;
     }
 
     /* Evaluate all neuron layers bottom-up (from input layer to output) */
@@ -113,8 +114,16 @@ public:
         return sum / _batch_size;
     }
 
+    /* TODO */
+    void compute_accuracy()
+    {
+
+    }
+
+
     /* Executes backward pass on the last layer, which is kinda special
-     * It involves both softmax and loss */
+     * It involves both softmax and loss 
+     * TODO - combine this with layer.backward_hidden - partly similar functionality*/
     void backward_pass_last_layer()
     {
         // lets start by computing derivations of "Softmax and CrossEntropy" wrt. Softmax inputs
@@ -127,6 +136,9 @@ public:
         }
 
         // TODO: normalize that computed gradient?
+        for (int i = 0; i < _batch_size; ++i) {
+            softmax_outputs[i] /= _batch_size; // we have derivatives wrt. inner pot
+        }
         
         // just an alias for easier understanding
         DoubleMat& received_vals = softmax_outputs;
@@ -146,31 +158,50 @@ public:
     }
 
     
-    /* Compute derivations wrt. neuron values using backpropagation 
-     * Compute also gradient - derivations wrt. weights and biases */
-    /* TODO */
+    /* Using backpropagation, compute gradients wrt. inputs, weights and biases */
     void backward_pass()
     {
+        // do the output layer separately (both softmax and cross entropy together)
         backward_pass_last_layer();
-        // TODO
+
+        if (layers_num() == 1) return;
+
+        // now all other hidden layers except first, which is also different
+        for (int i = layers_num() - 2; i > 0; --i) {
+            _layers[i]->backward_hidden(_layers[i + 1]->_deriv_inputs, _layers[i - 1]->_output_values);
+        }
+        // first hidden layer takes directly inputs
+        _layers[0]->backward_hidden(_layers[1]->_deriv_inputs, _input_batch);
+    }
+
+    /* Update weights and biases using previously computed gradients 
+     * For now uses fixed learn rate, TODO: upgrade */
+    void update_weights_biases()
+    {
+        for (int i = 0; i < layers_num(); ++i) {
+            _layers[i]->_weights_in -= _learn_rate * _layers[i]->_deriv_weights;
+            _layers[i]->_biases -= _learn_rate * _layers[i]->_deriv_biases;
+        }
+
     }
 
     /* TODO */
     void one_epoch()
     {
         /** TODO:
-         * receive batch of inputs + labels
-         *    transform labels to one hot vectors? or at least use them like that
+         * already has set batch of inputs + labels (labels are sparse)
          * do a forward pass with this batch - compute potentials+outputs for each layer (for all batch items)
          * backpropagate
          *    compute derivations wrt. outputs (last layer ez, other use derivations)
-         *    compute derivations wrt. weights -> gradient
+         *    compute derivations wrt. weights and biases -> gradient
          * change weights according to the gradient (subtract learn_rate * gradient)
          *    and also add momentum - gradient in prev step, multiplied by some alpha from [0,1]
          * 2 options - either implement learn rate decay (probably expnential?)
          *           - or use RMSprop instead of it - individually adapting learning rate for each weight (computed from gradient)
          */
-
+        forward_pass();
+        backward_pass();
+        update_weights_biases();
     }
 
     /* TODO */
@@ -181,16 +212,24 @@ public:
         // TODO: also normalize inputs?
 
         for (int i = 0; i < _num_epochs; i++) {
-            // TODO: for every epoch choose some random batch of inputs/labels to train on
+            // TODO: for every epoch choose some random batch of inputs+labels to train on
                 // feed them in the network using feed_input
+            
             one_epoch();
+
+            //std::cout << "neurons after epoch " << i << "\n";
+            //print_neurons();
+            //std::cout << "weights after epoch " << i << "\n";
+            //print_weights();
+
+            std::cout << "loss: " << calculate_loss_cross_enthropy() << "\n";
         }
     }
 
     /* TODO */
     void test_network()
     {
-        
+
     }
 
     /* Prints values of all weights, one layer a line
