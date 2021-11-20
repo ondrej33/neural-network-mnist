@@ -3,6 +3,7 @@
 #include <functional>
 #include <random>
 #include <memory>
+#include <math.h>       // log, exp
 
 #include "layer.hpp"
 #include "input_loading.hpp"
@@ -10,22 +11,23 @@
 /* Main class representing neural network */
 class NeuralNetwork
 {
-    using DoubleVecPtr = std::unique_ptr<DoubleVec>;
-
     /* numbers of neurons for each layer */
     std::vector<int> _topology;
 
-    /* vector of current inputs (might be matrix someday) */
+    /* Matrix representing batch, each row is one input vector */
     DoubleMat _input_batch;
+
+    /* vector of current labels */
+    std::vector<int> _input_labels;
 
     /* vector of hidden and output layers */
     std::vector<std::unique_ptr<Layer>> _layers;
 
     /* pointer to the data */
-    std::unique_ptr<std::vector<DoubleVecPtr>> _data_ptr = nullptr;
+    std::unique_ptr<std::vector<std::unique_ptr<DoubleVec>>> _data_ptr = nullptr;
 
     /* pointer to the labels */
-    DoubleVecPtr _labels_ptr = nullptr;
+    std::unique_ptr<std::vector<int>> _labels_ptr = nullptr;
 
     double _learn_rate;
     int _num_epochs;
@@ -67,12 +69,13 @@ public:
         _labels_ptr = std::move(get_labels(label_file));
     }
 
-    /* Get new input batch */
+    /* Get new input batch and input labels */
     // TODO - change this for batch loading
-    void feed_input(DoubleMat input_batch)
+    void feed_input(DoubleMat input_batch, std::vector<int> input_labels)
     {
         assert(input_batch.col_num() == _topology[0] && input_batch.row_num() == _batch_size);
         _input_batch = input_batch;
+        _input_labels = input_labels;
     }
 
     /* Evaluate all neuron layers bottom-up (from input layer to output) */
@@ -87,17 +90,32 @@ public:
         }
     }
 
-    
-    /* Compute derivations wrt. neuron values using backpropagation */
-    /* TODO */
-    void backward_pass_values()
+    /* Calculates loss for the whole batch from outputs & true targets */
+    double calculate_loss_enthropy() 
     {
-
+        // only care about output neurons with index same as LABEL for given input
+        // we can ignore others, they would be 0 in hot-1-coded vectors
+        double sum = 0.;
+        for (int i = 0; i < _batch_size; ++i) {
+            double correct_val_from_vector = _layers[_layers.size() - 1]->_output_values[i][_input_labels[i]];
+            // check if dont have 0, otherwise give some small value (same for 1 for symmetry)
+            if (correct_val_from_vector < 1.0e-7) {
+                correct_val_from_vector = 1.0e-7;
+            }
+            else if (correct_val_from_vector > 0.9999999) {
+                correct_val_from_vector = 0.9999999;
+            }
+            sum += -std::log(correct_val_from_vector);
+        }
+        // return the mean
+        return sum / _batch_size;
     }
 
-    /* Compute derivations wrt. weights using derivations wrt. neuron values */
+    
+    /* Compute derivations wrt. neuron values using backpropagation 
+     * Compute also gradient - derivations wrt. weights and biases */
     /* TODO */
-    void compute_gradient()
+    void backward_pass_values()
     {
 
     }
@@ -158,7 +176,7 @@ public:
     */
 
    /* TODO */
-    void sgd_train_network()
+    void train_network()
     {
         // TODO: random shuffle inputs at beginning? - but also the ouputs, so that they still correpond
                 // or choose N random indices for every batch, this sounds OK and EZ
@@ -167,12 +185,12 @@ public:
         for (int i = 0; i < _num_epochs; i++) {
             // TODO: for every epoch choose some random batch of inputs/labels to train on
                 // feed them in the network using feed_input
-            one_epoch_sgd();
+            one_epoch();
         }
     }
 
    /* TODO */
-    void one_epoch_sgd()
+    void one_epoch()
     {
         /** TODO:
          * receive batch of inputs + labels

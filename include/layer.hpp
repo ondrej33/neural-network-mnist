@@ -15,7 +15,11 @@ class Layer
      * we choose this shape, so that we wont have to transpose every time during forward pass*/
     DoubleMat _weights_in;
 
-    /* Matrix where each row contains >output value of each neuron, for one batch input< */
+    /* Matrix where each row contains >inner potential of each neuron, for one input vector of the batch< */
+    DoubleMat _inner_potential;
+
+    /* Matrix where each row contains >output value of each neuron, for one input vector of the batch< */
+    // TODO: do we need to store this for RELU layers? - it is easily computable
     DoubleMat _output_values;
 
     /* Biases of each neuron */
@@ -29,6 +33,7 @@ class Layer
 public:
     Layer(int batch_size, int num_neurons, int num_neurons_prev_layer, ActivationFunction& fn)
         : _weights_in(num_neurons_prev_layer, num_neurons),
+          _inner_potential(batch_size, num_neurons),
           _output_values(batch_size, num_neurons),
           _biases(num_neurons),
           _activation_fn(fn)

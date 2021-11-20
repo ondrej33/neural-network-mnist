@@ -24,7 +24,9 @@ int main() {
         DoubleVec(std::vector<double>{0.0, 0.0}),
         DoubleVec(std::vector<double>{0.0, 1.0}),
         DoubleVec(std::vector<double>{1.0, 1.0}),
-    }));
+        }), 
+        std::vector<int>{0,0,1,0}
+    );
 
     std::cout << "NEURONS for [(1,1), (0,0), (0,1), (1,1)]:\n";
     nw.forward_pass();

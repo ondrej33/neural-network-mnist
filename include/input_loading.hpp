@@ -28,12 +28,12 @@ std::unique_ptr<std::vector<std::unique_ptr<DoubleVec>>> get_inputs(std::string 
 
 /* Loads labels from given file
  * TODO: maybe load them as >char< type? it is just numbers 0-9 */
-std::unique_ptr<DoubleVec> get_labels(std::string file_name) {
+std::unique_ptr<std::vector<int>> get_labels(std::string file_name) {
     std::ifstream infile(file_name);
-    std::unique_ptr<DoubleVec> data;
+
     // TODO: initialize vec size so that it does not have to allocate all the time
-    auto vec_ptr = std::make_unique<DoubleVec>();
-    for (double num; infile >> num;) {
+    auto vec_ptr = std::make_unique<std::vector<int>>();
+    for (int num; infile >> num;) {
         vec_ptr->push_back(num);    
 
         if (infile.peek() == '\n') {
