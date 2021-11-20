@@ -3,6 +3,7 @@
 #include <functional>
 #include <random>
 #include <memory>
+#include <fstream>
 #include <math.h>       // log, exp
 
 #include "layer.hpp"
@@ -14,21 +15,23 @@ class NeuralNetwork
     /* numbers of neurons for each layer */
     std::vector<int> _topology;
 
-    /* Matrix representing batch, each row is one input vector */
+    /* Matrix representing current batch, each row is one input vector */
     DoubleMat _input_batch;
 
     /* vector of current labels */
-    std::vector<int> _target_labels;
+    std::vector<int> _batch_labels;
 
     /* vector of hidden and output layers */
     std::vector<std::unique_ptr<Layer>> _layers;
 
-    /* pointer to the data */
-    std::unique_ptr<std::vector<std::unique_ptr<DoubleVec>>> _data_ptr = nullptr;
+    /* pointer to the training vectors */
+    std::unique_ptr<std::vector<std::unique_ptr<DoubleVec>>> _train_vectors_ptr = nullptr;
+    /* pointer to the training labels */
+    std::unique_ptr<std::vector<int>> _train_labels_ptr = nullptr;
+    /* output file stream for TRAINING predictions */
+    std::ofstream _training_output_file;
 
-    /* pointer to the labels */
-    std::unique_ptr<std::vector<int>> _labels_ptr = nullptr;
-
+    /* hyperparameters */
     double _learn_rate;
     int _num_epochs;
     int _batch_size;
@@ -39,12 +42,10 @@ class NeuralNetwork
 public:
     /* Creates object, >>consumes given data and label pointer<< 
      * TODO: uncomment data loading, for now it just takes too long */
-    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate, int num_epochs, 
-        int batch_size, std::string data_file, std::string label_file)
+    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate, int num_epochs, int batch_size, 
+        std::string train_vectors, std::string train_labels, std::string train_output)
             : _topology(layer_sizes), 
               _input_batch(batch_size, layer_sizes[0]),
-              //_data_ptr(std::move(get_inputs(data_file, batch_size))),
-              //_labels_ptr(std::move(get_labels(label_file))),
               _learn_rate(learn_rate),
               _num_epochs(num_epochs),
               _batch_size(batch_size)
@@ -60,15 +61,22 @@ public:
         _layers.push_back(std::make_unique<Layer>(
             _batch_size, _topology[_topology.size() - 1], _topology[_topology.size()-2], soft_fn
         ));
+
+        // load the train data
+        load_train_data(train_vectors, train_labels, train_output);
     }
 
+    /* number of layers excluding input */
     int layers_num() const { return _layers.size(); }
 
+    int classes_num() const { return _topology[_topology.size() - 1]; }
+
     /* Puts new data and labels instead of old ones */
-    void change_data_and_labels(std::string data_file, std::string label_file)
+    void load_train_data(std::string data_file, std::string label_file, std::string output)
     {
-        _data_ptr = std::move(get_inputs(data_file, _batch_size));
-        _labels_ptr = std::move(get_labels(label_file));
+        _train_vectors_ptr = std::move(get_inputs(data_file, _topology[0]));
+        _train_labels_ptr = std::move(get_labels(label_file));
+        _training_output_file.open(output);
     }
 
     /* Get new input batch and input labels */
@@ -78,7 +86,7 @@ public:
         assert(input_batch.col_num() == _topology[0] && input_batch.row_num() == _batch_size);
         assert(target_labels.size() == _batch_size);
         _input_batch = input_batch;
-        _target_labels = target_labels;
+        _batch_labels = target_labels;
     }
 
     /* Evaluate all neuron layers bottom-up (from input layer to output) */
@@ -100,7 +108,7 @@ public:
         // we can ignore others, they would be 0 in hot-1-coded vectors
         double sum = 0.;
         for (int i = 0; i < _batch_size; ++i) {
-            double correct_val_from_vector = _layers[layers_num() - 1]->_output_values[i][_target_labels[i]];
+            double correct_val_from_vector = _layers[layers_num() - 1]->_output_values[i][_batch_labels[i]];
             // check if dont have 0, otherwise give some small value (same for 1 for symmetry)
             if (correct_val_from_vector < 1.0e-7) {
                 correct_val_from_vector = 1.0e-7;
@@ -120,7 +128,6 @@ public:
 
     }
 
-
     /* Executes backward pass on the last layer, which is kinda special
      * It involves both softmax and loss 
      * TODO - combine this with layer.backward_hidden - partly similar functionality*/
@@ -132,7 +139,7 @@ public:
         
         // and subtract 1 on indices of true target
         for (int i = 0; i < _batch_size; ++i) {
-            softmax_outputs[i][_target_labels[i]] -= 1; // we have derivatives wrt. inner pot
+            softmax_outputs[i][_batch_labels[i]] -= 1; // we have derivatives wrt. inner pot
         }
 
         // TODO: normalize that computed gradient?
@@ -207,8 +214,7 @@ public:
     /* TODO */
     void train_network()
     {
-        // TODO: random shuffle inputs at beginning? - but also the ouputs, so that they still correpond
-                // or choose N random indices for every batch, this sounds OK and EZ
+        // choose N random indices for every batch, this sounds OK and EZ
         // TODO: also normalize inputs?
 
         for (int i = 0; i < _num_epochs; i++) {
@@ -224,12 +230,40 @@ public:
 
             std::cout << "loss: " << calculate_loss_cross_enthropy() << "\n";
         }
+
+        // evaluate train vectors and get rid of training values (we can move the ptr now)
+        //predict_labels_to_file(_training_output_file, std::move(_train_vectors_ptr));
+        _train_vectors_ptr = nullptr;
+        _train_labels_ptr = nullptr;
     }
 
-    /* TODO */
-    void test_network()
+    void predict_labels_to_file(std::ofstream& file, 
+        std::unique_ptr<std::vector<std::unique_ptr<DoubleVec>>> input_vectors)
     {
+        for (int i = 0; i < input_vectors->size(); ++i) {
+            DoubleVec& input_vec = *(*input_vectors)[i];
+            
+            // initial layer is input, so lets use it to initiate first
+            _layers[0]->forward(DoubleMat(std::vector<DoubleVec>{input_vec}));
 
+            // now all other layers
+            for (int i = 1; i < layers_num(); ++i) {
+                _layers[i]->forward(_layers[i - 1]->_output_values);
+            }
+            assert(_layers[layers_num() - 1]->_output_values.row_num() == 1); // only one sample in "batch"
+
+            // find the output label (largest of the softmax values)
+            int label = 0;
+            double largest = 0.;
+            for (int i = 0; i < classes_num(); ++i) {
+                double label_i_prob = _layers[layers_num() - 1]->_output_values[0][i];
+                if (label_i_prob > largest) {
+                    largest = label_i_prob;
+                    label = i;
+                }
+            }
+            file << label << "\n";
+        }
     }
 
     /* Prints values of all weights, one layer a line
@@ -271,5 +305,9 @@ public:
             std::cout << "\n";
         }
         std::cout << "\n";
+    }
+
+    ~NeuralNetwork() {
+        if (_training_output_file.is_open()) { _training_output_file.close(); }
     }
 };
