@@ -7,7 +7,7 @@ int main() {
     // Simple neural network:  [N00, N01] -> [N10, N11] -> [N20, N21]
     std::vector<int> topology{2,2,2};
     double learn_rate = 0.5;
-    int num_epochs = 20;
+    int num_epochs = 30;
     int batch_size = 4;
     std::string train_data_file = "data/fashion_mnist_train_vectors.csv";
     std::string train_labels_file = "data/fashion_mnist_train_labels.csv";

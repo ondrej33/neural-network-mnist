@@ -4,7 +4,6 @@
 #include <random>
 
 #include "activation_fns.hpp"
-#include "error_fns.hpp"
 
 /* Extracts weights that goes into given neuron, from a matrix of all layer weights */
 DoubleVec get_ingoing_weights(const std::vector<DoubleVec>& weights_from_layer, int neuron_to)

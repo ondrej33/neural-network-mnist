@@ -12,22 +12,23 @@ class ActivationFunction
 public: 
     ActivationFunction() = default; 
    
+    /* Applies activation fn on every sample vector */
     virtual void apply_activation(DoubleMat& batch_mat) { }
 
+    /* Applies activation fn on every sample vector */
     virtual void apply_derivation(DoubleMat& batch_mat) { }
 
     virtual ~ActivationFunction() = default;
-
 };
 
-
+/* RELU function and its derivative */
 double relu(double x) { return std::fmax(0., x); }
 double relu_deriv(double x) { return (x > 0) ? 1. : 0.; }
-
 
 /* Class representing RELU activation function */
 class ReluFunction : public ActivationFunction
 {
+    /* Applies activation fn on every input of every sample vector */
     void apply_function(DoubleMat& batch_mat, std::function<double(double)> fn) const
     {
         for (int i = 0; i < batch_mat.row_num(); ++i) {
@@ -67,9 +68,11 @@ public:
         }
     }
 
-    void apply_derivation(DoubleMat& batch_mat) override { 
-        // TODO
-    }
+    /**
+     * We will NOT specify "apply_derivation" function
+     * Softmax derivation will be computed together with CrossEnropy derivation
+     * And the network class will handle this
+     */
 };
 
 
