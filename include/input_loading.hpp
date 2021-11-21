@@ -1,6 +1,7 @@
 #include <memory>       // std::unique_ptr
 #include <fstream>      // std::ifstream
 #include <sstream>      // std::stringstream
+#include <tuple>
 
 /* Loads inputs from given file, arranges by lines, one line must contain "nums_per_line" numbers
  * TODO: maybe load them as >char< type? they are just numbers 0-255
@@ -12,7 +13,7 @@ std::unique_ptr<std::vector<std::unique_ptr<DoubleVec>>> get_inputs(std::string 
     while (std::getline(infile, line))
     {
         std::stringstream line_stream(line);
-        auto vec_ptr = std::make_unique<DoubleVec>(nums_per_line);
+        auto vec_ptr = std::make_unique<DoubleVec>();
         // input vectors look just like "8,0,220,44,...,26,2"
         for (double num; line_stream >> num;) {
             vec_ptr->push_back(num);    
@@ -41,4 +42,43 @@ std::unique_ptr<std::vector<int>> get_labels(std::string file_name) {
         }
     }
     return vec_ptr;
+}
+
+struct VecLabelPair
+{
+    DoubleVec input_vec;
+    int label;
+};
+
+/* Loads both input vectors and labels 
+ * There must be same number of lines in both files */
+std::unique_ptr<std::vector<std::unique_ptr<VecLabelPair>>> load_vectors_labels(
+    std::string file_name_vectors, std::string file_name_labels, int nums_per_vector)
+{
+    std::ifstream vector_stream(file_name_vectors);
+    std::ifstream label_stream(file_name_labels);
+    auto result = std::make_unique<std::vector<std::unique_ptr<VecLabelPair>>>();
+
+    std::string line;
+    while (std::getline(vector_stream, line))
+    {
+        auto vec_label_ptr = std::make_unique<VecLabelPair>();
+
+        label_stream >> vec_label_ptr->label;
+        if (label_stream.peek() == '\n') {
+            label_stream.ignore();
+        }
+
+        // input vectors look just like "8,0,220,44,...,26,2"
+        std::stringstream line_stream(line);
+        for (double num; line_stream >> num;) {
+            vec_label_ptr->input_vec.push_back(num);    
+            
+            if (line_stream.peek() == ',') {
+                line_stream.ignore();
+            }
+        }
+        result->push_back(std::move(vec_label_ptr)); // unique_ptr must be moved
+    }
+    return result;
 }

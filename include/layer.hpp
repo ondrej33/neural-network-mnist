@@ -30,6 +30,10 @@ class Layer
     DoubleVec _deriv_biases;
     DoubleMat _deriv_inputs;
 
+    /* Previous gradients used for momentum computation */
+    DoubleMat _momentum_weights;
+    DoubleVec _momentum_biases;
+
     /* Activation function object (involves both function and derivative) */
     ActivationFunction& _activation_fn;
 
@@ -44,6 +48,8 @@ public:
           _deriv_weights(num_neurons_prev_layer, num_neurons),
           _deriv_biases(num_neurons),
           _deriv_inputs(batch_size, num_neurons_prev_layer),
+          _momentum_weights(num_neurons_prev_layer, num_neurons),
+          _momentum_biases(num_neurons),
           _activation_fn(fn)
     {
         // no need for initializing output values
