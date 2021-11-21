@@ -126,12 +126,6 @@ public:
         return sum / _batch_size;
     }
 
-    /* TODO */
-    void compute_accuracy()
-    {
-
-    }
-
     /* Executes backward pass on the last layer, which is kinda special
      * It involves both softmax and loss 
      * TODO - combine this with layer.backward_hidden - partly similar functionality*/
@@ -241,12 +235,35 @@ public:
             double learn_rate = _init_learn_rate / (1. + static_cast<double>(i) / _steps_learn_decay);
             one_epoch(learn_rate);
 
+            print_batch_accuracy();
             std::cout << "loss: " << calculate_loss_cross_enthropy() << "\n";
         }
 
         // TODO evaluate train vectors and get rid of training values (we can move the ptr now)
         //predict_labels_to_file(_training_output_file, std::move(_train_data_ptr));
         _train_data_ptr = nullptr;
+    }
+
+    /* Checks the network output and returns percentage of correctly labeled samples */
+    void print_batch_accuracy()
+    {
+        int correct = 0;
+        // find the output label (largest of the softmax values)
+        for (int sample_num = 0; sample_num < _batch_size; ++sample_num) {
+            int label = 0;
+            double largest = 0.;
+            for (int i = 0; i < classes_num(); ++i) {
+                double label_i_prob = _layers[layers_num() - 1]->_output_values[sample_num][i];
+                if (label_i_prob > largest) {
+                    largest = label_i_prob;
+                    label = i;
+                }
+            }
+            if (label == _batch_labels[sample_num]) {
+                correct++;
+            }
+        }
+        std::cout << correct << "/" << _batch_size << " ,"; // after this, loss is printed
     }
 
     /* Does one forward pass, gets the predicted label for given input vector */
