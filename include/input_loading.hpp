@@ -31,9 +31,9 @@ std::unique_ptr<std::vector<std::unique_ptr<DoubleVec>>> get_inputs(std::string 
  * TODO: maybe load them as >char< type? it is just numbers 0-9 */
 std::unique_ptr<std::vector<int>> get_labels(std::string file_name) {
     std::ifstream infile(file_name);
-
-    // TODO: initialize vec size so that it does not have to allocate all the time
     auto vec_ptr = std::make_unique<std::vector<int>>();
+    // reserve some memory, so that it does not have to allocate all the time
+    vec_ptr->reserve(10000);
     for (int num; infile >> num;) {
         vec_ptr->push_back(num);    
 
@@ -58,11 +58,14 @@ std::unique_ptr<std::vector<std::unique_ptr<VecLabelPair>>> load_vectors_labels(
     std::ifstream vector_stream(file_name_vectors);
     std::ifstream label_stream(file_name_labels);
     auto result = std::make_unique<std::vector<std::unique_ptr<VecLabelPair>>>();
-
+    // reserve some memory, so that it does not have to allocate all the time
+    result->reserve(10000);
     std::string line;
     while (std::getline(vector_stream, line))
     {
         auto vec_label_ptr = std::make_unique<VecLabelPair>();
+        // reserve some memory for one line
+        vec_label_ptr->input_vec.reserve(784);
 
         label_stream >> vec_label_ptr->label;
         if (label_stream.peek() == '\n') {
