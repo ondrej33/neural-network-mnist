@@ -1,16 +1,9 @@
-Máme klasifikační problém, tedy:
-- error funkce bude nějaká Cross entrophy
-- aktivační funkce pro output neurony Softmax
-- aktivační funkce pro hidden layers nejspíše Relu (nebo softplus - "smooth relu"), nebo možná sigmoid (spíš ne)
+Priorita:
+- najít chybu: model bez hidden vrstev dává 84%, ale s hidden vrstvama se vetšinou jen zhorší (i pod 80)
+    - možná v backpropagaci RELu vrstev?
+- zrychlit - nekopírovat vektory/matice, rezervovat paměť dopředu apod
 
-Implementační věci:
+Detaily:
 - rozdělit trénovací data na train X validate a něco s tím dělat
-- asi scalovat pixel hodnoty do [0,1] nebo tak
-- batch size pro gradient descent jedno z 32/64/128
-- aspoň 20 epoch, idk co je ideální
-- počet neuronů/vrstev najít na googlu, bude 784 input neuronů, 10 output
-    - několik hidden vrstev, může být něco ve stylu 400-200-100-50, nebo 128-128-...-128, idk
 - nevim jestli řešit prořezávání / dropout nebo tak, asi nejdříve ne, kdyžtak později
-- dořešit inicializaci weights
-- učení asi přes SGD with RMSProp + momentum
-    - RMSProp je adaptivní změna learning rate, momentum nám pomáhá udržovat směr změn
+- inicializace biasů?
