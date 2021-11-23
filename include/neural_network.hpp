@@ -18,7 +18,7 @@ class NeuralNetwork
     /* Matrix representing current batch, each row is one input vector */
     DoubleMat _input_batch;
 
-    /* vector of current labels */
+    /* vector of labels for current batch */
     std::vector<int> _batch_labels;
 
     /* vector of hidden and output layers */
@@ -34,8 +34,10 @@ class NeuralNetwork
     double _init_learn_rate;
     int _num_epochs;
     int _batch_size;
-    double _momentum;
     int _steps_learn_decay;
+    double _epsilon;
+    double _beta1;
+    double _beta2;
 
     ReluFunction relu_fn = ReluFunction();
     SoftmaxFunction soft_fn = SoftmaxFunction();
@@ -44,7 +46,7 @@ public:
     /* Creates object, >>consumes given data and label pointer<< 
      * TODO: uncomment data loading, for now it just takes too long */
     NeuralNetwork(std::vector<int> layer_sizes, double learn_rate, int num_epochs, 
-        int batch_size, double momentum, int steps_learn_decay,
+        int batch_size, int steps_learn_decay, double epsilon, double beta1, double beta2,
         std::string train_vectors, std::string train_labels, std::string train_output)
             : _topology(layer_sizes), 
               _input_batch(batch_size, layer_sizes[0]),
@@ -52,8 +54,10 @@ public:
               _init_learn_rate(learn_rate),
               _num_epochs(num_epochs),
               _batch_size(batch_size),
-              _momentum(momentum),
-              _steps_learn_decay(steps_learn_decay)
+              _steps_learn_decay(steps_learn_decay),
+              _epsilon(epsilon),
+              _beta1(beta1),
+              _beta2(beta2)
     {
         assert(_topology.size() > 1);
 
@@ -182,42 +186,45 @@ public:
     }
 
     /* Update weights and biases using previously computed gradients 
-     * Uses momentum + learn rate which decays */
-    void update_weights_biases(double learn_rate)
+     * At thme moment uses momentum + learn rate which decays */
+    void update_weights_biases(double learn_rate, int iteration)
     {
         for (int i = 0; i < layers_num(); ++i) {
-            auto weight_change = (_momentum * _layers[i]->_momentum_weights) - (learn_rate * _layers[i]->_deriv_weights);
-            auto bias_change = (_momentum * _layers[i]->_momentum_biases) - (learn_rate * _layers[i]->_deriv_biases);
-            _layers[i]->_weights_in += weight_change;
-            _layers[i]->_biases += bias_change;
+            // first update momentum using computed gradients
+            _layers[i]->_momentum_weights = _beta1 * _layers[i]->_momentum_weights + (1 - _beta1) * _layers[i]->_deriv_weights;
+            _layers[i]->_momentum_biases = _beta1 * _layers[i]->_momentum_biases + (1 - _beta1) * _layers[i]->_deriv_biases;
 
-            // update momentums
-            _layers[i]->_momentum_weights = std::move(weight_change);
-            _layers[i]->_momentum_biases = std::move(bias_change);
+            // compute corrected momentum (without this, it would be biased in early iterations)
+            double correction = 1. - std::pow(_beta1, iteration + 1);
+            auto better_momentum_weights = _layers[i]->_momentum_weights / correction;
+            auto better_momentum_biases = _layers[i]->_momentum_biases / correction;
+
+            // also update cache with squared gradients
+            _layers[i]->_cached_weights = _beta2 * _layers[i]->_cached_weights + (1 - _beta2) * square_inside(_layers[i]->_deriv_weights);
+            _layers[i]->_cached_biases = _beta2 * _layers[i]->_cached_biases + (1 - _beta2) * square_inside(_layers[i]->_deriv_biases);
+
+            // again compute corrected cache (without this, it would be biased in early iterations)
+            double correction2 = 1. - std::pow(_beta2, iteration + 1);
+            auto better_cached_weights = _layers[i]->_cached_weights / correction2;
+            auto better_cached_biases = _layers[i]->_cached_biases / correction2;
+
+            // finally update the parameters
+            _layers[i]->_weights_in += divide_by_items((-learn_rate * better_momentum_weights), (add_scalar_to_all_items(sqrt_inside(better_cached_weights), _epsilon)));
+            _layers[i]->_biases += divide_by_items((-learn_rate * better_momentum_biases), (add_scalar_to_all_items(sqrt_inside(better_cached_biases), _epsilon)));
         }
     }
 
-    /* TODO */
-    void one_epoch(double learn_rate)
+    /* One epoch of training process */
+    void one_epoch(double learn_rate, int iter)
     {
-        /** TODO:
-         * already has set batch of inputs + labels (labels are sparse)
-         * do a forward pass with this batch - compute potentials+outputs for each layer (for all batch items)
-         * backpropagate
-         *    compute derivations wrt. outputs (last layer ez, other use derivations)
-         *    compute derivations wrt. weights and biases -> gradient
-         * change weights according to the gradient (subtract learn_rate * gradient)
-         *    and also add momentum - gradient in prev step, multiplied by some alpha from [0,1]
-         * 2 options - either implement learn rate decay (probably expnential?)
-         *           - or use RMSprop instead of it - individually adapting learning rate for each weight (computed from gradient)
-         * add weight decay + dropout
-         */
-        forward_pass();
-        backward_pass();
-        update_weights_biases(learn_rate);
+        forward_pass();                           // evaluate current batch
+        backward_pass();                          // backpropagate to compute gradients
+        update_weights_biases(learn_rate, iter);  // update parameters using gradients
     }
 
-    /* TODO */
+    /* Whole training process
+     * Shuffles data, iterates for many epochs, always creating batch and calling one_epoch()
+     */
     void train_network()
     {
         // Randomly shuffle (both vectors+labels) and then take batches sequentially
@@ -232,8 +239,9 @@ public:
                 _batch_labels[j] = pair.label;
             }
  
+            // update decaying learn rate
             double learn_rate = _init_learn_rate / (1. + static_cast<double>(i) / _steps_learn_decay);
-            one_epoch(learn_rate);
+            one_epoch(learn_rate, i);
 
             print_batch_accuracy();
             std::cout << "loss: " << calculate_loss_cross_enthropy() << "\n";

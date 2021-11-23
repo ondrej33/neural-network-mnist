@@ -30,9 +30,12 @@ class Layer
     DoubleVec _deriv_biases;
     DoubleMat _deriv_inputs;
 
-    /* Previous gradients used for momentum computation */
+    /* Previous gradients / cached stuff used for Adam */
     DoubleMat _momentum_weights;
     DoubleVec _momentum_biases;
+    DoubleMat _cached_weights;
+    DoubleVec _cached_biases;
+
 
     /* Activation function object (involves both function and derivative) */
     ActivationFunction& _activation_fn;
@@ -50,10 +53,12 @@ public:
           _deriv_inputs(batch_size, num_neurons_prev_layer),
           _momentum_weights(num_neurons_prev_layer, num_neurons),
           _momentum_biases(num_neurons),
+          _cached_weights(num_neurons_prev_layer, num_neurons),
+          _cached_biases(num_neurons),
           _activation_fn(fn)
     {
         // no need for initializing output values
-        // TODO: initialize biases? how
+        // TODO: initialize biases? - zero init is often ok
         
         // initiate weights - we use some kind of Xavier initialization for now
         // TODO: different seed for every layer
@@ -88,7 +93,7 @@ public:
         _activation_fn.apply_activation(_output_values);
     }
 
-    /* TODO - backwardpass, receives deriv_inputs from next layer
+    /* Backward pass, receives deriv_inputs from the following layer
      * THIS WILL NOT BE USED FOR LAST LAYER
      * computes deriv_weights, deriv_biases, deriv_inputs */
     void backward_hidden(DoubleMat deriv_inputs_next_layer, const DoubleMat& outputs_prev_layer)

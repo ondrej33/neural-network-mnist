@@ -28,6 +28,46 @@ public:
     void push_back(double num) { _vec.push_back(num); }
     void pop_back(double num) { _vec.pop_back(); }
 
+    /* Arithmetic operators that modify sthe object */
+
+    DoubleVec& operator+=(const DoubleVec& other)
+    {
+        this->compareSizes(other);
+        for (int i = 0; i < size(); ++i) {
+            _vec[i] += other._vec[i];
+        }
+        return *this;
+    }
+
+    DoubleVec& operator-=(const DoubleVec& other)
+    {
+        this->compareSizes(other);
+        for (int i = 0; i < size(); ++i) {
+            _vec[i] -= other._vec[i];
+        }
+        return *this;
+    }
+
+    DoubleVec& operator*=(double scalar)
+    {
+        for (int i = 0; i < size(); ++i) {
+            _vec[i] *= scalar;
+        }
+        return *this;
+    }
+
+    // having *= for dot product does not make sense
+
+    DoubleVec& operator/=(double scalar)
+    {
+        for (int i = 0; i < size(); ++i) {
+            _vec[i] /= scalar;
+        }
+        return *this;
+    }
+
+    /* Other arithmetic operators that dont modify given objects */
+
     friend DoubleVec operator-(DoubleVec vec);
     friend DoubleVec operator+(DoubleVec first, const DoubleVec& second);
     friend DoubleVec operator-(DoubleVec first, const DoubleVec& second);
@@ -38,45 +78,17 @@ public:
     friend DoubleVec operator/(DoubleVec vec, double scalar);
     friend DoubleVec operator/(double scalar, DoubleVec vec);
 
-    DoubleVec& operator+=(const DoubleVec& other)
-    {
-        this->compareSizes(other);
-        for (int i = 0; i < size(); i++) {
-            _vec[i] += other._vec[i];
-        }
-        return *this;
-    }
+    /* Squares the inside values */
+    friend DoubleVec square_inside(DoubleVec vec);
 
-    DoubleVec& operator-=(const DoubleVec& other)
-    {
-        this->compareSizes(other);
-        for (int i = 0; i < size(); i++) {
-            _vec[i] -= other._vec[i];
-        }
-        return *this;
-    }
+    /* adds scalar to every item in vector */
+    friend DoubleVec add_scalar_to_all_items(DoubleVec vec, double d);
 
-    DoubleVec& operator*=(double scalar)
-    {
-        for (int i = 0; i < size(); i++) {
-            _vec[i] *= scalar;
-        }
-        return *this;
-    }
-
-    // having *= for dot product does not make sense
-
-    DoubleVec& operator/=(double scalar)
-    {
-        for (int i = 0; i < size(); i++) {
-            _vec[i] /= scalar;
-        }
-        return *this;
-    }
-
+    /* Relational operators */
     bool operator==(const DoubleVec& other) const { return this->_vec == other._vec; }
-
     bool operator!=(const DoubleVec& other) const { return !(*this == other); }
+
+    /* Indexing and iterating */
 
     double operator[](int i) const 
     { 
@@ -96,14 +108,16 @@ public:
     std::vector<double>::const_iterator begin() const { return _vec.begin(); }
     std::vector<double>::const_iterator end() const { return _vec.end(); }
 
+    void reserve(int n) { _vec.reserve(n); }
+
     void compareSizes(const DoubleVec& other) const;
 };
 
 /* unary minus */
 DoubleVec operator-(DoubleVec vec)
 {   
-    for (int i = 0; i < vec._vec.size(); i++) {
-        vec._vec[i] *= -1;
+    for (int i = 0; i < vec._vec.size(); ++i) {
+        vec[i] *= -1;
     }
     return vec;
 }
@@ -120,8 +134,8 @@ double operator*(const DoubleVec& first, const DoubleVec& second)
 {
     first.compareSizes(second);
     double result = 0;
-    for (int i = 0; i < first._vec.size(); i++) {
-        result += first._vec[i] * second._vec[i];
+    for (int i = 0; i < first.size(); ++i) {
+        result += first[i] * second[i];
     }
     return result;
 }
@@ -139,6 +153,42 @@ DoubleVec operator/(DoubleVec vec, double scalar)
 DoubleVec operator/(double scalar, DoubleVec vec)
 { return vec /= scalar; }
 
+/* Squares the inside values */
+DoubleVec square_inside(DoubleVec vec)
+{
+    for (int i = 0; i < vec.size(); ++i) {
+        vec[i] *= vec[i];
+    }
+    return vec;
+}
+
+/* Compute sqrt of the inside values */
+DoubleVec sqrt_inside(DoubleVec vec)
+{
+    for (int i = 0; i < vec.size(); ++i) {
+        vec[i] = std::sqrt(vec[i]);
+    }
+    return vec;
+}
+
+/* adds scalar to every item in vector */
+DoubleVec add_scalar_to_all_items(DoubleVec vec, double d)
+{      
+    for (int i = 0; i < vec.size(); ++i) {
+        vec[i] += d;
+    }
+    return vec;
+}
+
+/* divides vectors by items */
+DoubleVec divide_by_items(DoubleVec first, const DoubleVec& second)
+{      
+    assert(first.size() == second.size());
+    for (int i = 0; i < first.size(); ++i) {
+        first[i] /= second[i];
+    }
+    return first;
+}
 
 /**
  * @brief Check if the another vector is of the same length as ours
@@ -153,6 +203,7 @@ void DoubleVec::compareSizes(const DoubleVec& other) const {
     }    
     #endif
 }
+
 
 /**
  * Matrix of doubles with all necessary operators defined 
@@ -192,7 +243,7 @@ public:
         assert(n >= 0 && col_num() >= n + 1);
 
         DoubleVec column(row_num());
-        for (int i = 0; i < row_num(); i++) {
+        for (int i = 0; i < row_num(); ++i) {
             column[i] = _matrix_rows[i][n];
         }
         return column;
@@ -222,7 +273,7 @@ public:
     DoubleMat &operator+=(const DoubleMat &other)
     {        
         assert(same_dimensions(other));
-        for (int i = 0; i < row_num(); i++) {
+        for (int i = 0; i < row_num(); ++i) {
             _matrix_rows[i] += other._matrix_rows[i];
         }
         return *this;
@@ -231,28 +282,51 @@ public:
     DoubleMat &operator-=(const DoubleMat &other)
     {
         assert(same_dimensions(other));
-        for (int i = 0; i < row_num(); i++) {
+        for (int i = 0; i < row_num(); ++i) {
             _matrix_rows[i] -= other._matrix_rows[i];
         }
         return *this;
     }
 
     /* multiplying by a scalar */
-    DoubleMat &operator*=(const double &scal)
+    DoubleMat &operator*=(double scal)
     {
-        for (int i = 0; i < row_num(); i++) {
+        for (int i = 0; i < row_num(); ++i) {
             _matrix_rows[i] *= scal;
+        }
+        return *this;
+    }
+
+    /* dividing by a scalar */
+    DoubleMat &operator/=(double scal)
+    {
+        for (int i = 0; i < row_num(); ++i) {
+            _matrix_rows[i] /= scal;
         }
         return *this;
     }
 
     // having *= for matrix product does not make sense
 
+    friend DoubleMat square_inside(DoubleMat mat);
+
+    friend DoubleMat add_scalar_to_all_items(DoubleMat mat, double d);
+
+    /* adds given vector to all rows */
+    DoubleMat &add_vec_to_all_rows(const DoubleVec &vec)
+    {        
+        assert(vec.size() == col_num());
+        for (int i = 0; i < row_num(); ++i) {
+            _matrix_rows[i] += vec;
+        }
+        return *this;
+    }
+
     /* get a transpose of the matrix */
     DoubleMat transpose() const
     {
         auto transp = DoubleMat(col_num(), row_num());
-        for (int i = 0; i < col_num(); i++) {
+        for (int i = 0; i < col_num(); ++i) {
             transp[i] = col(i);
         }
         return transp;
@@ -264,17 +338,6 @@ public:
 
     std::vector<DoubleVec>::const_iterator begin() const { return _matrix_rows.begin(); }
     std::vector<DoubleVec>::const_iterator end() const { return _matrix_rows.end(); }
-
-    /* adds given vector to all rows */
-    DoubleMat &add_vec_to_all_rows(const DoubleVec &vec)
-    {        
-        assert(vec.size() == col_num());
-        for (int i = 0; i < row_num(); i++) {
-            _matrix_rows[i] += vec;
-        }
-        return *this;
-    }
-
 };
 
 
@@ -292,6 +355,13 @@ DoubleMat operator*(DoubleMat m, double scalar)
 DoubleMat operator*(double scalar, DoubleMat m)
 { return m *= scalar; }
 
+/* division of a matrix by a scalar - both sides */
+DoubleMat operator/(DoubleMat m, double scalar)
+{ return m /= scalar; }
+
+DoubleMat operator/(double scalar, DoubleMat m)
+{ return m /= scalar; }
+
 /* multiplication of a vector by a matrix - both sides 
  * if vector is first param, it is considered as [1, n] matrix
  * if vector is second param, it is considered as [n,1] matrix */
@@ -300,7 +370,7 @@ DoubleVec operator*(DoubleVec v, const DoubleMat &m)
     assert(m.row_num() == v.size());
     auto result = DoubleVec(m.col_num());
 
-    for (int i = 0; i < m.col_num(); i++) {
+    for (int i = 0; i < m.col_num(); ++i) {
         result[i] = v * m.col(i);
     }
     return result;
@@ -311,7 +381,7 @@ DoubleVec operator*(const DoubleMat &m, DoubleVec v)
     assert(m.col_num() == v.size());
     auto result = DoubleVec(m.row_num());
 
-    for (int i = 0; i < m.row_num(); i++) {
+    for (int i = 0; i < m.row_num(); ++i) {
         result[i] = m.row(i) * v;
     }
     return result;
@@ -323,22 +393,60 @@ DoubleMat operator*(const DoubleMat &first, const DoubleMat &second)
     assert(first.col_num() == second.row_num());
     auto result = DoubleMat(first.row_num(), second.col_num());
 
-    // TODO - check if ok
-    for (int i = 0; i < first.row_num(); i++) {
-        for (int j = 0; j < second.col_num(); j++) {
+    for (int i = 0; i < first.row_num(); ++i) {
+        for (int j = 0; j < second.col_num(); ++j) {
             result[i][j] = first.row(i) * second.col(j);
         }
     }
     return result;
 }
 
+/* Squares the inside values */
+DoubleMat square_inside(DoubleMat mat)
+{
+    for (int i = 0; i < mat.row_num(); ++i) {
+        mat[i] = square_inside(mat[i]);
+    }
+    return mat;
+}
+
+/* Compute sqrt of the inside values */
+DoubleMat sqrt_inside(DoubleMat mat)
+{
+    for (int i = 0; i < mat.row_num(); ++i) {
+        mat[i] = sqrt_inside(mat[i]);
+    }
+    return mat;
+}
+
+/* adds given vector to all rows */
+DoubleMat add_scalar_to_all_items(DoubleMat mat, double d)
+{        
+    for (int i = 0; i < mat.row_num(); ++i) {
+        mat[i] = std::move(add_scalar_to_all_items(mat[i], d));
+    }
+    return mat;
+}
+
+/* divides matrices by items */
+DoubleMat divide_by_items(DoubleMat first, const DoubleMat& second)
+{      
+    assert(first.col_num() == second.col_num() && first.row_num() == second.row_num());
+    for (int i = 0; i < first.row_num(); ++i) {
+        first[i] = std::move(divide_by_items(first[i], second[i]));
+    }
+    return first;
+}
+
+
+
 /* printing a matrix, double printed to 4 decimal places */
 inline void print_matrix(const DoubleMat &m)
 {
     std::cout << std::setprecision(4) << std::fixed;
 
-    for (int i = 0; i < m.row_num(); i++) {
-       for (int j = 0; j < m.col_num(); j++) {
+    for (int i = 0; i < m.row_num(); ++i) {
+       for (int j = 0; j < m.col_num(); ++j) {
             std::cout << m[i][j] << " ";
         }
         std::cout << "\n";

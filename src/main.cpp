@@ -15,43 +15,20 @@ int main() {
     std::string train_outputs = "data/trainPredictions";
     std::string test_outputs = "data/actualTestPredictions";
 
-    std::vector<int> topology{784,50,30,10};
-    double learn_rate = 0.003;
-    int num_epochs = 750;
-    int batch_size = 128;    
-    double momentum = 0.75;
-    int steps_learn_decay = 25;
-    NeuralNetwork nw(topology, learn_rate, num_epochs, batch_size, momentum, steps_learn_decay,
+    std::vector<int> topology{784,10};
+    double learn_rate = 0.005;
+    int num_epochs = 1500;
+    int batch_size = 64;    
+    int steps_learn_decay = 60;
+    double epsilon = 1e-7;
+    double beta1 = 0.9;
+    double beta2 = 0.999;
+    NeuralNetwork nw(topology, learn_rate, num_epochs, batch_size, 
+        steps_learn_decay, epsilon, beta1, beta2,
         train_data_file, train_labels_file, train_outputs);
 
     nw.train_network();
     nw.test_network(test_data_file, test_outputs);
-
-    /*
-    // Try XOR on some inputs
-    nw.feed_input(DoubleMat(std::vector<DoubleVec>{
-        DoubleVec(std::vector<double>{1.0, 1.0}),
-        DoubleVec(std::vector<double>{0.0, 0.0}),
-        DoubleVec(std::vector<double>{1.0, 0.0}),
-        DoubleVec(std::vector<double>{0.0, 1.0}),
-        }), 
-        std::vector<int>{0,0,1,1}
-    );
-    nw.train_network();
-
-    // Try it on some inputs
-    nw.feed_input(DoubleMat(std::vector<DoubleVec>{
-        DoubleVec(std::vector<double>{1.0, 0.0}),
-        DoubleVec(std::vector<double>{0.0, 0.0}),
-        DoubleVec(std::vector<double>{0.0, 0.0}),
-        DoubleVec(std::vector<double>{0.0, 1.0}),
-        }), 
-        std::vector<int>{0,0,0,1}
-    );
-    std::cout << "NEURONS:\n";
-    nw.forward_pass();
-    nw.print_neurons();
-    */
 
     std::cout << "Time: " << time(NULL) - t1 << "\n";
 
