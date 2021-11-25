@@ -205,8 +205,8 @@ public:
         }
     }
 
-    /* One epoch of training process */
-    void one_epoch(double learn_rate, int iter)
+    /* One batch of training process */
+    void one_batch(double learn_rate, int iter)
     {
         forward_pass();                           // evaluate current batch
         backward_pass();                          // backpropagate to compute gradients
@@ -214,29 +214,36 @@ public:
     }
 
     /* Whole training process
-     * Shuffles data, iterates for many epochs, always creating batch and calling one_epoch()
-     */
+     * Shuffles data, iterates for few epochs
+     * for every epoch always iterates through examples using batches */
     void train_network()
     {
-        // Randomly shuffle (both vectors+labels) and then take batches sequentially
-        std::random_shuffle (_train_data_ptr->begin(), _train_data_ptr->end());
         int num_examples = _train_data_ptr->size();
+        // we will ignore last few examples in every epoch (it is randomly shuffled, so its probably OK)
+        int batches_total = num_examples / _batch_size;
              
         for (int i = 0; i < _num_epochs; i++) {
-            // for every epoch choose batch of inputs+labels to train on
-            for (int j = 0; j < _batch_size; ++j) {
-                VecLabelPair& pair = *(*_train_data_ptr)[(i * _batch_size + j) % num_examples];
-                _input_batch[j] = pair.input_vec / 255; // normalize inputs
-                _batch_labels[j] = pair.label;
-            }
- 
             // update decaying learn rate
             double learn_rate = _init_learn_rate / (1. + static_cast<double>(i) / _steps_learn_decay);
-            one_epoch(learn_rate, i);
 
-            print_batch_accuracy();
-            std::cout << "loss: " << calculate_loss_cross_enthropy() << "\n";
-        }
+            for (int batch_num = 0; batch_num < batches_total; ++batch_num) {
+                // Randomly shuffle (both vectors+labels) and then take batches sequentially
+                std::random_shuffle (_train_data_ptr->begin(), _train_data_ptr->end());
+
+                // extract the examples for current batch of inputs+labels from training data
+                for (int j = 0; j < _batch_size; ++j) {
+                    VecLabelPair& pair = *(*_train_data_ptr)[(i * _batch_size + j) % num_examples];
+                    _input_batch[j] = pair.input_vec / 255; // normalize inputs
+                    _batch_labels[j] = pair.label;
+                }
+
+                one_batch(learn_rate, i);
+
+                std::cout << "ep " << i << ", b " << batch_num << " ";
+                print_batch_accuracy();
+                std::cout << "loss: " << calculate_loss_cross_enthropy() << "\n";
+            }
+         }
 
         // TODO: evaluate train vectors and get rid of training values (we can move the ptr now)
         //predict_labels_to_file(_training_output_file, std::move(_train_data_ptr));

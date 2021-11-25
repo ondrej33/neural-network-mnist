@@ -15,16 +15,16 @@ int main() {
     std::string train_outputs = "data/trainPredictions";
     std::string test_outputs = "data/actualTestPredictions";
 
-    std::vector<int> topology{784,128,10};
+    std::vector<int> topology{784,64,10};
     double learn_rate = 0.001;
-    int num_epochs = 1000;
+    int num_epochs = 2;
     int batch_size = 64;    
-    int steps_learn_decay = 1000;
+    int epochs_learn_decay = 1;
     double epsilon = 1e-7;
     double beta1 = 0.9;
     double beta2 = 0.999;
     NeuralNetwork nw(topology, learn_rate, num_epochs, batch_size, 
-        steps_learn_decay, epsilon, beta1, beta2,
+        epochs_learn_decay, epsilon, beta1, beta2,
         train_data_file, train_labels_file, train_outputs);
 
     nw.train_network();
