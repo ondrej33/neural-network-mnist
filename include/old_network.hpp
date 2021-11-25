@@ -5,6 +5,10 @@
 
 #include "activation_fns.hpp"
 
+/**
+ * FIRST DEPLETED VERSION OF NETWORK, IT IS LEFT JUST FOR REFERENCE
+ */
+
 /* Extracts weights that goes into given neuron, from a matrix of all layer weights */
 DoubleVec get_ingoing_weights(const std::vector<DoubleVec>& weights_from_layer, int neuron_to)
 {
@@ -26,16 +30,16 @@ class NeuralNetwork
     // weights are organized by [layer_from][neuron_from][neuron_to], where neuron_to is in next layer
     std::vector<std::vector<DoubleVec>> _weights; 
 
-    double _bias_hidden = 0;
-    double _bias_output = 0;
+    float _bias_hidden = 0;
+    float _bias_output = 0;
 
-    std::function<double(double)> _activation_fn;
+    std::function<float(float)> _activation_fn;
     double _learn_rate;
 
 public:
     NeuralNetwork(
         std::vector<int> layer_sizes, 
-        std::function<double(double)> activation_fn, 
+        std::function<float(float)> activation_fn, 
         double learn_rate)
             : _topology(layer_sizes), 
               _activation_fn(activation_fn), 
@@ -47,7 +51,7 @@ public:
 
         for (int i = 0; i < _weights.size(); ++i) {
             _weights[i].resize(layer_sizes[i], DoubleVec(layer_sizes[i + 1]));
-            std::normal_distribution<double> distribution(0.0, 1.0 / layer_sizes[i]);  // values have to be 0.0 and 1.0
+            std::normal_distribution<float> distribution(0.0, 1.0 / layer_sizes[i]);  // values have to be 0.0 and 1.0
 
             for (int j = 0; j < _weights[i].size(); ++j) {
                 for (int k = 0; k < _weights[i][j].size(); ++k) {
@@ -81,8 +85,8 @@ public:
             for (int j = 0; j < neuron_values[i].size(); ++j) {
                 bool is_last_layer = (i == neuron_values.size() - 1);
             
-                double bias = (is_last_layer) ? _bias_output : _bias_hidden;
-                double inner_potential = bias + prev_layer_values * get_ingoing_weights(_weights[i - 1], j);
+                float bias = (is_last_layer) ? _bias_output : _bias_hidden;
+                float inner_potential = bias + prev_layer_values * get_ingoing_weights(_weights[i - 1], j);
                 neuron_values[i][j] = _activation_fn(inner_potential);
             }
         }
@@ -116,7 +120,7 @@ public:
             }            
         }
         // lets assign derivations for input neurons to 0, just that there is something
-        derivations[last_row_idx] = DoubleVec(std::vector<double>(_topology[0], 0));
+        derivations[last_row_idx] = DoubleVec(std::vector<float>(_topology[0], 0));
         return derivations;
     }
 

@@ -22,14 +22,14 @@ public:
 };
 
 /* RELU function and its derivative */
-double relu(double x) { return std::fmax(0., x); }
-double relu_deriv(double x) { return (x > 0) ? 1. : 0.; }
+float relu(float x) { return std::fmax(0., x); }
+float relu_deriv(float x) { return (x > 0) ? 1. : 0.; }
 
 /* Class representing RELU activation function */
 class ReluFunction : public ActivationFunction
 {
     /* Applies activation fn on every input of every sample vector */
-    void apply_function(DoubleMat& batch_mat, std::function<double(double)> fn) const
+    void apply_function(DoubleMat& batch_mat, std::function<float(float)> fn) const
     {
         for (int i = 0; i < batch_mat.row_num(); ++i) {
             for (int j = 0; j < batch_mat[0].size(); ++j) {
@@ -56,7 +56,7 @@ public:
     void apply_activation(DoubleMat& batch_mat) override { 
         for (auto& vec : batch_mat) {
             DoubleVec exponents(vec.size());
-            double sum = 0.;
+            float sum = 0.;
             for (int i = 0; i < vec.size(); ++i) {
                 exponents[i] = std::exp(vec[i]);
                 sum += exponents[i];
@@ -74,18 +74,3 @@ public:
      * And the network class will handle this
      */
 };
-
-
-
-/* Other functions that might be useful */
-
-double softplus(double x) { return std::log(1. + std::exp(x)); }
-
-double sigmoid(double x) { return 1. / (1. + std::exp(-x)); }
-
-double tanh(double x) 
-{ 
-    double pos = exp(x);
-    double neg = exp(-x);
-    return (pos - neg) / (pos + neg); 
-}

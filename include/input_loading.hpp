@@ -15,7 +15,7 @@ std::unique_ptr<std::vector<std::unique_ptr<DoubleVec>>> get_inputs(std::string 
         std::stringstream line_stream(line);
         auto vec_ptr = std::make_unique<DoubleVec>();
         // input vectors look just like "8,0,220,44,...,26,2"
-        for (double num; line_stream >> num;) {
+        for (float num; line_stream >> num;) {
             vec_ptr->push_back(num);    
             
             if (line_stream.peek() == ',') {
@@ -74,7 +74,7 @@ std::unique_ptr<std::vector<std::unique_ptr<VecLabelPair>>> load_vectors_labels(
 
         // input vectors look just like "8,0,220,44,...,26,2"
         std::stringstream line_stream(line);
-        for (double num; line_stream >> num;) {
+        for (float num; line_stream >> num;) {
             vec_label_ptr->input_vec.push_back(num);    
             
             if (line_stream.peek() == ',') {

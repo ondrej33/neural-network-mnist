@@ -99,13 +99,13 @@ public:
     }
 
     /* Calculates loss for the whole batch from outputs & true targets */
-    double calculate_loss_cross_enthropy() 
+    float calculate_loss_cross_enthropy() 
     {
         // only care about output neurons with index same as LABEL for given input
         // we can ignore others, they would be 0 in hot-1-coded vectors
-        double sum = 0.;
+        float sum = 0.;
         for (int i = 0; i < _batch_size; ++i) {
-            double correct_val_from_vector = _layers[layers_num() - 1]->_output_values[i][_batch_labels[i]];
+            float correct_val_from_vector = _layers[layers_num() - 1]->_output_values[i][_batch_labels[i]];
             // check if dont have 0, otherwise give some small value (same for 1 for symmetry)
             if (correct_val_from_vector < 1.0e-7) {
                 correct_val_from_vector = 1.0e-7;
@@ -186,7 +186,7 @@ public:
             _layers[i]->_momentum_biases = _beta1 * _layers[i]->_momentum_biases + (1 - _beta1) * _layers[i]->_deriv_biases;
 
             // compute corrected momentum (without this, it would be biased in early iterations)
-            double correction = 1. - std::pow(_beta1, iteration + 1);
+            float correction = 1. - std::pow(_beta1, iteration + 1);
             auto better_momentum_weights = _layers[i]->_momentum_weights / correction;
             auto better_momentum_biases = _layers[i]->_momentum_biases / correction;
 
@@ -195,7 +195,7 @@ public:
             _layers[i]->_cached_biases = _beta2 * _layers[i]->_cached_biases + (1 - _beta2) * square_inside(_layers[i]->_deriv_biases);
 
             // again compute corrected cache (without this, it would be biased in early iterations)
-            double correction2 = 1. - std::pow(_beta2, iteration + 1);
+            float correction2 = 1. - std::pow(_beta2, iteration + 1);
             auto better_cached_weights = _layers[i]->_cached_weights / correction2;
             auto better_cached_biases = _layers[i]->_cached_biases / correction2;
 
@@ -257,9 +257,9 @@ public:
         // find the output label (largest of the softmax values)
         for (int sample_num = 0; sample_num < _batch_size; ++sample_num) {
             int label = 0;
-            double largest = 0.;
+            float largest = 0.;
             for (int i = 0; i < classes_num(); ++i) {
-                double label_i_prob = _layers[layers_num() - 1]->_output_values[sample_num][i];
+                float label_i_prob = _layers[layers_num() - 1]->_output_values[sample_num][i];
                 if (label_i_prob > largest) {
                     largest = label_i_prob;
                     label = i;
@@ -289,9 +289,9 @@ public:
 
         // find the output label (largest of the softmax values)
         int label = 0;
-        double largest = 0.;
+        float largest = 0.;
         for (int i = 0; i < classes_num(); ++i) {
-            double label_i_prob = _layers[layers_num() - 1]->_output_values[0][i];
+            float label_i_prob = _layers[layers_num() - 1]->_output_values[0][i];
             if (label_i_prob > largest) {
                 largest = label_i_prob;
                 label = i;

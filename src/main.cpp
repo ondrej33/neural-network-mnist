@@ -16,10 +16,10 @@ int main() {
     std::string test_outputs = "data/actualTestPredictions";
 
     std::vector<int> topology{784,64,10};
-    double learn_rate = 0.001;
+    double learn_rate = 0.002;
     int num_epochs = 2;
     int batch_size = 64;    
-    int epochs_learn_decay = 1;
+    int epochs_learn_decay = 2;
     double epsilon = 1e-7;
     double beta1 = 0.9;
     double beta2 = 0.999;

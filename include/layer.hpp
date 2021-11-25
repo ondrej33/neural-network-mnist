@@ -61,7 +61,7 @@ public:
         // initiate weights - we use some kind of Xavier initialization for now
         // TODO: different seed for every layer?
         std::default_random_engine generator;
-        std::normal_distribution<double> distribution(0.0, 1.0 / num_neurons);  // values have to be 0.0 and 1.0
+        std::normal_distribution<float> distribution(0.0, 1.0 / num_neurons);  // values have to be 0.0 and 1.0
 
         for (int i = 0; i < _weights_in.row_num(); ++i) {
             for (int j = 0; j < _weights_in.col_num(); ++j) {
