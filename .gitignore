@@ -39,6 +39,7 @@
 data/
 java_evaluator/
 python_evaluator/
+updated_computations/
 
 build
 

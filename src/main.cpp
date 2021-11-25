@@ -15,11 +15,11 @@ int main() {
     std::string train_outputs = "data/trainPredictions";
     std::string test_outputs = "data/actualTestPredictions";
 
-    std::vector<int> topology{784,10};
-    double learn_rate = 0.005;
-    int num_epochs = 1500;
+    std::vector<int> topology{784,128,10};
+    double learn_rate = 0.001;
+    int num_epochs = 1000;
     int batch_size = 64;    
-    int steps_learn_decay = 60;
+    int steps_learn_decay = 1000;
     double epsilon = 1e-7;
     double beta1 = 0.9;
     double beta2 = 0.999;

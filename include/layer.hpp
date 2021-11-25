@@ -36,7 +36,6 @@ class Layer
     DoubleMat _cached_weights;
     DoubleVec _cached_biases;
 
-
     /* Activation function object (involves both function and derivative) */
     ActivationFunction& _activation_fn;
 
@@ -57,11 +56,10 @@ public:
           _cached_biases(num_neurons),
           _activation_fn(fn)
     {
-        // no need for initializing output values
         // TODO: initialize biases? - zero init is often ok
         
         // initiate weights - we use some kind of Xavier initialization for now
-        // TODO: different seed for every layer
+        // TODO: different seed for every layer?
         std::default_random_engine generator;
         std::normal_distribution<double> distribution(0.0, 1.0 / num_neurons);  // values have to be 0.0 and 1.0
 
@@ -95,7 +93,8 @@ public:
 
     /* Backward pass, receives deriv_inputs from the following layer
      * THIS WILL NOT BE USED FOR LAST LAYER
-     * computes deriv_weights, deriv_biases, deriv_inputs */
+     * computes deriv_weights, deriv_biases, deriv_inputs 
+     * (deriv_inputs are basically derivs wrt outputs of prev layer) */
     void backward_hidden(DoubleMat deriv_inputs_next_layer, const DoubleMat& outputs_prev_layer)
     {
         /* Relu deriv would place 0 where inner_potential (relu input) was leq than 0, 
@@ -111,7 +110,7 @@ public:
         // just an alias for easier understanding
         DoubleMat& received_vals = deriv_inputs_next_layer;
         
-        // TODO: we wanna do "outputs_prev_layer.transpose() * received_vals", but not waste time&space
+        // TODO: optimize
         _deriv_weights = outputs_prev_layer.transpose() * received_vals;
 
         // for bias derivs, we just sum through the samples
@@ -122,8 +121,7 @@ public:
         }
 
         // for derivation wrt. inputs, we multiply received values through the weigths (transponed to make it ok)
-        // TODO again, create func for this directly
+        // TODO: optimize
         _deriv_inputs = received_vals * _weights_in.transpose();
     }
-
 };

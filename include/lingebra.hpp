@@ -23,10 +23,12 @@ public:
     explicit DoubleVec(std::vector<double> &v): _vec(v) {}
     explicit DoubleVec(std::vector<double> &&v): _vec(std::move(v)) {}
 
+    /* std::vector operations */
     int size() const { return _vec.size(); }
     bool empty() const { return _vec.empty(); }
     void push_back(double num) { _vec.push_back(num); }
     void pop_back(double num) { _vec.pop_back(); }
+    void reserve(int n) { _vec.reserve(n); }
 
     /* Arithmetic operators that modify sthe object */
 
@@ -107,8 +109,6 @@ public:
 
     std::vector<double>::const_iterator begin() const { return _vec.begin(); }
     std::vector<double>::const_iterator end() const { return _vec.end(); }
-
-    void reserve(int n) { _vec.reserve(n); }
 
     void compareSizes(const DoubleVec& other) const;
 };
@@ -332,6 +332,58 @@ public:
         return transp;
     }
 
+    /* Computes dot product of row of first matrix and col of second matrix */
+    friend double dot_row_col(const DoubleMat& first, const DoubleMat& second, int row, int col);
+
+    /* Multiplies two matrices, the result is saved inside this matrix 
+       Does not waste time or space */
+    DoubleMat& save_multiplication(const DoubleMat& first, const DoubleMat& second)
+    {
+        assert(first.col_num() == second.row_num());
+        assert(first.row_num() == this->row_num() && second.col_num() == this->col_num());
+        for (int i = 0; i < first.row_num(); ++i) {
+            for (int j = 0; j < second.col_num(); ++j) {
+                (*this)[i][j] = dot_row_col(first, second, i, j);
+            }
+        }
+    }
+
+    /* Multiplies TRANSPONED first matrix with second, the result is saved inside this matrix 
+       Does not waste time or space */
+    DoubleMat& save_multiplication_transponse_first(const DoubleMat& first, const DoubleMat& second)
+    {
+        assert(first.row_num() == second.row_num());
+        assert(first.col_num() == this->row_num() && second.col_num() == this->col_num());
+        for (int i = 0; i < first.col_num(); ++i) {
+            for (int j = 0; j < second.col_num(); ++j) {
+                double res = 0.;
+                for (int k = 0; k < first.row_num(); ++k) {
+                    res += first[k][i] * second[k][j];
+                }
+                (*this)[i][j] = res;
+            }
+        }
+        return *this;
+    }
+
+    /* Multiplies first matrix with TRANSPONED second, the result is saved inside this matrix 
+       Does not waste time or space */
+    DoubleMat& save_multiplication_transponse_second(const DoubleMat& first, const DoubleMat& second)
+    {
+        assert(first.col_num() == second.col_num());
+        assert(first.row_num() == this->row_num() && second.row_num() == this->col_num());
+        for (int i = 0; i < first.row_num(); ++i) {
+            for (int j = 0; j < second.row_num(); ++j) {
+                double res = 0.;
+                for (int k = 0; k < first.col_num(); ++k) {
+                    res += first[i][k] * second[j][k];
+                }
+                (*this)[i][j] = res;
+            }
+        }
+        return *this;
+    }
+
     /* iterators */
     std::vector<DoubleVec>::iterator begin() { return _matrix_rows.begin(); }
     std::vector<DoubleVec>::iterator end() { return _matrix_rows.end(); }
@@ -340,6 +392,38 @@ public:
     std::vector<DoubleVec>::const_iterator end() const { return _matrix_rows.end(); }
 };
 
+/* Computes dot product of row of first matrix and col of second matrix */
+double dot_row_col(const DoubleMat& first, const DoubleMat& second, int row, int col)
+{
+    assert(first.col_num() == second.row_num());
+    double res = 0.;
+    for (int i = 0; i < first.col_num(); ++i) {
+        res += first[row][i] * second[i][col];
+    }
+    return res;
+}
+
+/* Computes dot product of row of matrix and vector */
+double dot_row_vec(const DoubleMat& mat, const DoubleVec& vec, int row)
+{
+    assert(mat.col_num() == vec.size());
+    double res = 0.;
+    for (int i = 0; i < mat.col_num(); ++i) {
+        res += mat[row][i] * vec[i];
+    }
+    return res;
+}
+
+/* Computes dot product of vector and col of matrix */
+double dot_vec_col(const DoubleVec& vec, const DoubleMat& mat, int col)
+{
+    assert(vec.size() == mat.row_num());
+    double res = 0.;
+    for (int i = 0; i < vec.size(); ++i) {
+        res += vec[i] * mat[i][col];
+    }
+    return res;
+}
 
 /* matrix addition and subtraction */
 DoubleMat operator+(DoubleMat x, const DoubleMat &y)
@@ -365,6 +449,7 @@ DoubleMat operator/(double scalar, DoubleMat m)
 /* multiplication of a vector by a matrix - both sides 
  * if vector is first param, it is considered as [1, n] matrix
  * if vector is second param, it is considered as [n,1] matrix */
+// TODO optimize
 DoubleVec operator*(DoubleVec v, const DoubleMat &m)
 { 
     assert(m.row_num() == v.size());
@@ -376,6 +461,7 @@ DoubleVec operator*(DoubleVec v, const DoubleMat &m)
     return result;
 }
 
+// TODO optimize
 DoubleVec operator*(const DoubleMat &m, DoubleVec v)
 { 
     assert(m.col_num() == v.size());
@@ -388,6 +474,7 @@ DoubleVec operator*(const DoubleMat &m, DoubleVec v)
 }
 
 /* multiplication of compatible matrices */
+// TODO optimize
 DoubleMat operator*(const DoubleMat &first, const DoubleMat &second)
 { 
     assert(first.col_num() == second.row_num());
@@ -437,8 +524,6 @@ DoubleMat divide_by_items(DoubleMat first, const DoubleMat& second)
     }
     return first;
 }
-
-
 
 /* printing a matrix, double printed to 4 decimal places */
 inline void print_matrix(const DoubleMat &m)

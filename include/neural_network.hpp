@@ -43,8 +43,7 @@ class NeuralNetwork
     SoftmaxFunction soft_fn = SoftmaxFunction();
 
 public:
-    /* Creates object, >>consumes given data and label pointer<< 
-     * TODO: uncomment data loading, for now it just takes too long */
+    /* Creates object from given params/hyperparams, and training data files */
     NeuralNetwork(std::vector<int> layer_sizes, double learn_rate, int num_epochs, 
         int batch_size, int steps_learn_decay, double epsilon, double beta1, double beta2,
         std::string train_vectors, std::string train_labels, std::string train_output)
@@ -87,16 +86,6 @@ public:
         _training_output_file.open(output);
     }
 
-    /* Get new input batch and input labels */
-    // TODO - change this for batch loading
-    void feed_input(DoubleMat input_batch, std::vector<int> target_labels)
-    {
-        assert(input_batch.col_num() == _topology[0] && input_batch.row_num() == _batch_size);
-        assert(target_labels.size() == _batch_size);
-        _input_batch = input_batch;
-        _batch_labels = target_labels;
-    }
-
     /* Evaluate all neuron layers bottom-up (from input layer to output) */
     void forward_pass()
     {
@@ -135,16 +124,16 @@ public:
      * TODO - combine this with layer.backward_hidden - partly similar functionality*/
     void backward_pass_last_layer()
     {
-        // lets start by computing derivations of "Softmax and CrossEntropy" wrt. Softmax inputs
+        // lets start by computing derivations of "Softmax AND CrossEntropy" (together) wrt. Softmax inputs
         // thats easy, we just need those outputs and target labels
         DoubleMat softmax_outputs = _layers[layers_num() - 1]->_output_values;
         
         // and subtract 1 on indices of true target
         for (int i = 0; i < _batch_size; ++i) {
-            softmax_outputs[i][_batch_labels[i]] -= 1; // we have derivatives wrt. inner pot
+            softmax_outputs[i][_batch_labels[i]] -= 1; // we receive derivatives wrt. inner potential
         }
 
-        // TODO: normalize that computed gradient? - might not be good idea
+        // TODO: normalize that computed gradient? - might not be good idea, slows computation?
         /*
         for (int i = 0; i < _batch_size; ++i) {
             softmax_outputs[i] /= _batch_size; // we have derivatives wrt. inner pot
@@ -155,6 +144,7 @@ public:
         DoubleMat& received_vals = softmax_outputs;
         
         const DoubleMat& outputs_prev_layer = (layers_num() == 1) ? _input_batch : _layers[layers_num() - 2]->_output_values;
+        // TODO: optimize
         _layers[layers_num() - 1]->_deriv_weights = outputs_prev_layer.transpose() * received_vals;
 
         // for bias derivs, we just sum through the samples
@@ -165,6 +155,7 @@ public:
         }
 
         // for derivation wrt. inputs, we multiply received values through the weigths (transponed to make it ok)
+        // TODO: optimize
         _layers[layers_num() - 1]->_deriv_inputs = received_vals * _layers[layers_num() - 1]->_weights_in.transpose();
     }
 
@@ -186,7 +177,7 @@ public:
     }
 
     /* Update weights and biases using previously computed gradients 
-     * At thme moment uses momentum + learn rate which decays */
+     * At the moment uses Adam optimizer + somehow learn rate which decays */
     void update_weights_biases(double learn_rate, int iteration)
     {
         for (int i = 0; i < layers_num(); ++i) {
@@ -247,7 +238,7 @@ public:
             std::cout << "loss: " << calculate_loss_cross_enthropy() << "\n";
         }
 
-        // TODO evaluate train vectors and get rid of training values (we can move the ptr now)
+        // TODO: evaluate train vectors and get rid of training values (we can move the ptr now)
         //predict_labels_to_file(_training_output_file, std::move(_train_data_ptr));
         _train_data_ptr = nullptr;
     }
