@@ -13,10 +13,10 @@ public:
     ActivationFunction() = default; 
    
     /* Applies activation fn on every sample vector */
-    virtual void apply_activation(DoubleMat& batch_mat) { }
+    virtual void apply_activation(FloatMat& batch_mat) { }
 
     /* Applies activation fn on every sample vector */
-    virtual void apply_derivation(DoubleMat& batch_mat) { }
+    virtual void apply_derivation(FloatMat& batch_mat) { }
 
     virtual ~ActivationFunction() = default;
 };
@@ -29,7 +29,7 @@ float relu_deriv(float x) { return (x > 0) ? 1. : 0.; }
 class ReluFunction : public ActivationFunction
 {
     /* Applies activation fn on every input of every sample vector */
-    void apply_function(DoubleMat& batch_mat, std::function<float(float)> fn) const
+    void apply_function(FloatMat& batch_mat, std::function<float(float)> fn) const
     {
         for (int i = 0; i < batch_mat.row_num(); ++i) {
             for (int j = 0; j < batch_mat[0].size(); ++j) {
@@ -41,9 +41,9 @@ class ReluFunction : public ActivationFunction
 public: 
     ReluFunction() = default;
     
-    void apply_activation(DoubleMat& batch_mat) override { apply_function(batch_mat, relu); }
+    void apply_activation(FloatMat& batch_mat) override { apply_function(batch_mat, relu); }
 
-    void apply_derivation(DoubleMat& batch_mat) override { apply_function(batch_mat, relu_deriv); }
+    void apply_derivation(FloatMat& batch_mat) override { apply_function(batch_mat, relu_deriv); }
 };
 
 
@@ -53,7 +53,7 @@ class SoftmaxFunction : public ActivationFunction
 public: 
     SoftmaxFunction() = default;
     
-    void apply_activation(DoubleMat& batch_mat) override { 
+    void apply_activation(FloatMat& batch_mat) override { 
         for (auto& vec : batch_mat) {
             float sum = 0.;
             for (int i = 0; i < vec.size(); ++i) {

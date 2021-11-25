@@ -10,9 +10,9 @@
  */
 
 /* Extracts weights that goes into given neuron, from a matrix of all layer weights */
-DoubleVec get_ingoing_weights(const std::vector<DoubleVec>& weights_from_layer, int neuron_to)
+FloatVec get_ingoing_weights(const std::vector<FloatVec>& weights_from_layer, int neuron_to)
 {
-    DoubleVec weights_to(weights_from_layer.size());
+    FloatVec weights_to(weights_from_layer.size());
     for (int i = 0; i < weights_to.size(); ++i) {
         weights_to[i] = weights_from_layer[i][neuron_to];
     }
@@ -25,10 +25,10 @@ class NeuralNetwork
 {
     // numbers of neurons for each layer
     std::vector<int> _topology;
-    DoubleVec _input;
+    FloatVec _input;
 
     // weights are organized by [layer_from][neuron_from][neuron_to], where neuron_to is in next layer
-    std::vector<std::vector<DoubleVec>> _weights; 
+    std::vector<std::vector<FloatVec>> _weights; 
 
     float _bias_hidden = 0;
     float _bias_output = 0;
@@ -50,7 +50,7 @@ public:
         std::default_random_engine generator;
 
         for (int i = 0; i < _weights.size(); ++i) {
-            _weights[i].resize(layer_sizes[i], DoubleVec(layer_sizes[i + 1]));
+            _weights[i].resize(layer_sizes[i], FloatVec(layer_sizes[i + 1]));
             std::normal_distribution<float> distribution(0.0, 1.0 / layer_sizes[i]);  // values have to be 0.0 and 1.0
 
             for (int j = 0; j < _weights[i].size(); ++j) {
@@ -62,7 +62,7 @@ public:
     }
 
     // Get new input values
-    void feed_input(DoubleVec input_vec)
+    void feed_input(FloatVec input_vec)
     {
         assert(input_vec.size() == _topology[0]);
         _input = input_vec;
@@ -70,17 +70,17 @@ public:
 
     // Evaluate all neuron layers bottom-up (from input layer to output) 
     // return all neuron values, neurons are arranged by layers
-    std::vector<DoubleVec> eval_network()
+    std::vector<FloatVec> eval_network()
     {
         // neurons by layers
-        std::vector<DoubleVec> neuron_values(_topology.size());
+        std::vector<FloatVec> neuron_values(_topology.size());
         neuron_values[0] = _input;
 
         // zero-th layer is input, so start with first
         for (int i = 1; i < neuron_values.size(); ++i) {
-            neuron_values[i] = DoubleVec(_topology[i]);
+            neuron_values[i] = FloatVec(_topology[i]);
 
-            DoubleVec& prev_layer_values = neuron_values[i - 1];
+            FloatVec& prev_layer_values = neuron_values[i - 1];
 
             for (int j = 0; j < neuron_values[i].size(); ++j) {
                 bool is_last_layer = (i == neuron_values.size() - 1);
@@ -95,20 +95,20 @@ public:
 
     // Computes derivations of Error_k wrt. every neuron y_j using backpropagation
     // return derivation values for all neurons, arranged by layers
-    std::vector<DoubleVec> back_propagation_sigmoid(
-        std::vector<DoubleVec> neuron_values, DoubleVec desired_output)
+    std::vector<FloatVec> back_propagation_sigmoid(
+        std::vector<FloatVec> neuron_values, FloatVec desired_output)
     {
         // create vectors to contain derivation values
-        std::vector<DoubleVec> derivations(_topology.size());
+        std::vector<FloatVec> derivations(_topology.size());
         int last_row_idx = _topology.size() - 1;
 
         // first assign values to last row, it is special case
-        derivations[last_row_idx] = DoubleVec(_topology[last_row_idx]);
+        derivations[last_row_idx] = FloatVec(_topology[last_row_idx]);
         derivations[last_row_idx] = neuron_values[last_row_idx] - desired_output;
 
         // now compute all the other derivation, layer by layer backwards
         for (int i = last_row_idx - 1; i > 0; --i) {  // we use i > 0 cause we dont care about input neurons
-            derivations[i] = DoubleVec(_topology[i]);
+            derivations[i] = FloatVec(_topology[i]);
 
             // compute deriv for all neurons in our layer
             for (int j = 0; j < _topology[i]; ++j) {
@@ -120,22 +120,22 @@ public:
             }            
         }
         // lets assign derivations for input neurons to 0, just that there is something
-        derivations[last_row_idx] = DoubleVec(std::vector<float>(_topology[0], 0));
+        derivations[last_row_idx] = FloatVec(std::vector<float>(_topology[0], 0));
         return derivations;
     }
 
     // Compute derivations of Error_k wrt. every weight w_ji using known derivations wrt. neuron values
     // return derivation values for all weights, arranged by [layers][from][to]
-    std::vector<std::vector<DoubleVec>> get_weight_derivations_sigmoid(
-        std::vector<DoubleVec> neuron_values, std::vector<DoubleVec> neuron_derivations)
+    std::vector<std::vector<FloatVec>> get_weight_derivations_sigmoid(
+        std::vector<FloatVec> neuron_values, std::vector<FloatVec> neuron_derivations)
     {
         // dW_ij = dY_j * dActiv(ksi_j) * Y_i
-        std::vector<std::vector<DoubleVec>> weight_derivations(_weights.size());
+        std::vector<std::vector<FloatVec>> weight_derivations(_weights.size());
 
         for (int layer_from = 0; layer_from < _weights.size(); ++layer_from) {
-            weight_derivations[layer_from] = std::vector<DoubleVec>(_weights[layer_from].size());
+            weight_derivations[layer_from] = std::vector<FloatVec>(_weights[layer_from].size());
             for (int i = 0; i < _weights[layer_from].size(); ++i) {
-                weight_derivations[layer_from][i] = DoubleVec(_weights[layer_from][i].size());
+                weight_derivations[layer_from][i] = FloatVec(_weights[layer_from][i].size());
                 for (int j = 0; j < _weights[i].size(); ++j) {
                     // for sigmoidal function, dS(ksi_j) = S(ksi_j)*(1-S(ksi_j)), and S(ksi_j) is neuron j's value
                     weight_derivations[layer_from][i][j] = \

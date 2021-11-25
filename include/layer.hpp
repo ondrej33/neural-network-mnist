@@ -13,28 +13,28 @@ class Layer
 {
     /* Matrix of incoming weights, ith row contains ith weight for >every< neuron 
      * we choose this shape, so that we wont have to transpose every time during forward pass*/
-    DoubleMat _weights_in;
+    FloatMat _weights_in;
 
     /* Biases of each neuron */
-    DoubleVec _biases;
+    FloatVec _biases;
 
     /* Matrix where each row contains >inner potential of each neuron, for one input vector of the batch< */
-    DoubleMat _inner_potential;
+    FloatMat _inner_potential;
 
     /* Matrix where each row contains >output value of each neuron, for one input vector of the batch< */
     // TODO: do we need to store this for RELU layers? - it is easily computable
-    DoubleMat _output_values;
+    FloatMat _output_values;
 
     /* Gradient wrt. weights, biases, inputs */
-    DoubleMat _deriv_weights;
-    DoubleVec _deriv_biases;
-    DoubleMat _deriv_inputs;
+    FloatMat _deriv_weights;
+    FloatVec _deriv_biases;
+    FloatMat _deriv_inputs;
 
     /* Previous gradients / cached stuff used for Adam */
-    DoubleMat _momentum_weights;
-    DoubleVec _momentum_biases;
-    DoubleMat _cached_weights;
-    DoubleVec _cached_biases;
+    FloatMat _momentum_weights;
+    FloatVec _momentum_biases;
+    FloatMat _cached_weights;
+    FloatVec _cached_biases;
 
     /* Activation function object (involves both function and derivative) */
     ActivationFunction& _activation_fn;
@@ -71,16 +71,16 @@ public:
     }
 
     /* getters for vectors, might be useful */
-    DoubleMat get_outputs() const { return _output_values; }
-    DoubleMat get_weights() const { return _weights_in; }
-    DoubleVec get_biases() const { return _biases; }
+    FloatMat get_outputs() const { return _output_values; }
+    FloatMat get_weights() const { return _weights_in; }
+    FloatVec get_biases() const { return _biases; }
 
     int batch_size() const { return _output_values.row_num(); }
     int num_neurons() const { return _output_values.col_num(); }
 
     /* Take matrix, where each row is input vector, together batch_size inputs
      * input vector contains outputs from prev layer and we use them to compute our outputs */
-    void forward(const DoubleMat& input_batch)
+    void forward(const FloatMat& input_batch)
     {
         // first compute inner potential
         _inner_potential = (input_batch * _weights_in).add_vec_to_all_rows(_biases);
@@ -95,7 +95,7 @@ public:
      * THIS WILL NOT BE USED FOR LAST LAYER
      * computes deriv_weights, deriv_biases, deriv_inputs 
      * (deriv_inputs are basically derivs wrt outputs of prev layer) */
-    void backward_hidden(DoubleMat deriv_inputs_next_layer, const DoubleMat& outputs_prev_layer)
+    void backward_hidden(FloatMat deriv_inputs_next_layer, const FloatMat& outputs_prev_layer)
     {
         /* Relu deriv would place 0 where inner_potential (relu input) was leq than 0, 
          * then we would mult it with incoming matrix from next layer.
@@ -108,7 +108,7 @@ public:
             }
         }
         // just an alias for easier understanding
-        DoubleMat& received_vals = deriv_inputs_next_layer;
+        FloatMat& received_vals = deriv_inputs_next_layer;
         
         // TODO: optimize
         _deriv_weights = outputs_prev_layer.transpose() * received_vals;

@@ -16,7 +16,7 @@ class NeuralNetwork
     std::vector<int> _topology;
 
     /* Matrix representing current batch, each row is one input vector */
-    DoubleMat _input_batch;
+    FloatMat _input_batch;
 
     /* vector of labels for current batch */
     std::vector<int> _batch_labels;
@@ -126,7 +126,7 @@ public:
     {
         // lets start by computing derivations of "Softmax AND CrossEntropy" (together) wrt. Softmax inputs
         // thats easy, we just need those outputs and target labels
-        DoubleMat softmax_outputs = _layers[layers_num() - 1]->_output_values;
+        FloatMat softmax_outputs = _layers[layers_num() - 1]->_output_values;
         
         // and subtract 1 on indices of true target
         for (int i = 0; i < _batch_size; ++i) {
@@ -141,9 +141,9 @@ public:
         */
         
         // just an alias for easier understanding
-        DoubleMat& received_vals = softmax_outputs;
+        FloatMat& received_vals = softmax_outputs;
         
-        const DoubleMat& outputs_prev_layer = (layers_num() == 1) ? _input_batch : _layers[layers_num() - 2]->_output_values;
+        const FloatMat& outputs_prev_layer = (layers_num() == 1) ? _input_batch : _layers[layers_num() - 2]->_output_values;
         // TODO: optimize
         _layers[layers_num() - 1]->_deriv_weights = outputs_prev_layer.transpose() * received_vals;
 
@@ -273,13 +273,13 @@ public:
     }
 
     /* Does one forward pass, gets the predicted label for given input vector */
-    int predict_one_label(DoubleVec input_vec)
+    int predict_one_label(FloatVec input_vec)
     {
         // normalize inputs
         input_vec /= 255.;
 
         // initial layer is input, so lets use it to initiate first
-        _layers[0]->forward(DoubleMat(std::vector<DoubleVec>{input_vec}));
+        _layers[0]->forward(FloatMat(std::vector<FloatVec>{input_vec}));
 
         // now all other layers
         for (int i = 1; i < layers_num(); ++i) {
@@ -302,10 +302,10 @@ public:
 
     /* Prints label prediction for every input vector to given file */
     void predict_labels_to_file(std::ofstream& file, 
-        std::unique_ptr<std::vector<std::unique_ptr<DoubleVec>>> input_vectors)
+        std::unique_ptr<std::vector<std::unique_ptr<FloatVec>>> input_vectors)
     {
         for (int i = 0; i < input_vectors->size(); ++i) {
-            DoubleVec& input_vec = *(*input_vectors)[i];
+            FloatVec& input_vec = *(*input_vectors)[i];
             int label = predict_one_label(input_vec);
             file << label << "\n";
         }

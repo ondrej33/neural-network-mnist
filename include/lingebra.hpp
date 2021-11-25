@@ -9,19 +9,19 @@
  * Vector of floats with all necessary operators defined 
  */
 
-class DoubleVec
+class FloatVec
 {
     std::vector<float> _vec;
 
 public:
-    DoubleVec(): _vec() {}
+    FloatVec(): _vec() {}
 
-    /* construct a zero DoubleVec of given dimension */
-    explicit DoubleVec(int dimension): _vec(std::vector<float>(dimension)) {}
+    /* construct a zero FloatVec of given dimension */
+    explicit FloatVec(int dimension): _vec(std::vector<float>(dimension)) {}
 
-    /* construct a DoubleVec from given vector of floats */
-    explicit DoubleVec(std::vector<float> &v): _vec(v) {}
-    explicit DoubleVec(std::vector<float> &&v): _vec(std::move(v)) {}
+    /* construct a FloatVec from given vector of floats */
+    explicit FloatVec(std::vector<float> &v): _vec(v) {}
+    explicit FloatVec(std::vector<float> &&v): _vec(std::move(v)) {}
 
     /* std::vector operations */
     int size() const { return _vec.size(); }
@@ -32,7 +32,7 @@ public:
 
     /* Arithmetic operators that modify sthe object */
 
-    DoubleVec& operator+=(const DoubleVec& other)
+    FloatVec& operator+=(const FloatVec& other)
     {
         this->compareSizes(other);
         for (int i = 0; i < size(); ++i) {
@@ -41,7 +41,7 @@ public:
         return *this;
     }
 
-    DoubleVec& operator-=(const DoubleVec& other)
+    FloatVec& operator-=(const FloatVec& other)
     {
         this->compareSizes(other);
         for (int i = 0; i < size(); ++i) {
@@ -50,7 +50,7 @@ public:
         return *this;
     }
 
-    DoubleVec& operator*=(float scalar)
+    FloatVec& operator*=(float scalar)
     {
         for (int i = 0; i < size(); ++i) {
             _vec[i] *= scalar;
@@ -60,7 +60,7 @@ public:
 
     // having *= for dot product does not make sense
 
-    DoubleVec& operator/=(float scalar)
+    FloatVec& operator/=(float scalar)
     {
         for (int i = 0; i < size(); ++i) {
             _vec[i] /= scalar;
@@ -70,25 +70,25 @@ public:
 
     /* Other arithmetic operators that dont modify given objects */
 
-    friend DoubleVec operator-(DoubleVec vec);
-    friend DoubleVec operator+(DoubleVec first, const DoubleVec& second);
-    friend DoubleVec operator-(DoubleVec first, const DoubleVec& second);
-    friend float operator*(const DoubleVec& first, const DoubleVec& second);
+    friend FloatVec operator-(FloatVec vec);
+    friend FloatVec operator+(FloatVec first, const FloatVec& second);
+    friend FloatVec operator-(FloatVec first, const FloatVec& second);
+    friend float operator*(const FloatVec& first, const FloatVec& second);
 
-    friend DoubleVec operator*(DoubleVec vec, float scalar);
-    friend DoubleVec operator*(float scalar, DoubleVec vec);
-    friend DoubleVec operator/(DoubleVec vec, float scalar);
-    friend DoubleVec operator/(float scalar, DoubleVec vec);
+    friend FloatVec operator*(FloatVec vec, float scalar);
+    friend FloatVec operator*(float scalar, FloatVec vec);
+    friend FloatVec operator/(FloatVec vec, float scalar);
+    friend FloatVec operator/(float scalar, FloatVec vec);
 
     /* Squares the inside values */
-    friend DoubleVec square_inside(DoubleVec vec);
+    friend FloatVec square_inside(FloatVec vec);
 
     /* adds scalar to every item in vector */
-    friend DoubleVec add_scalar_to_all_items(DoubleVec vec, float d);
+    friend FloatVec add_scalar_to_all_items(FloatVec vec, float d);
 
     /* Relational operators */
-    bool operator==(const DoubleVec& other) const { return this->_vec == other._vec; }
-    bool operator!=(const DoubleVec& other) const { return !(*this == other); }
+    bool operator==(const FloatVec& other) const { return this->_vec == other._vec; }
+    bool operator!=(const FloatVec& other) const { return !(*this == other); }
 
     /* Indexing and iterating */
 
@@ -110,11 +110,11 @@ public:
     std::vector<float>::const_iterator begin() const { return _vec.begin(); }
     std::vector<float>::const_iterator end() const { return _vec.end(); }
 
-    void compareSizes(const DoubleVec& other) const;
+    void compareSizes(const FloatVec& other) const;
 };
 
 /* unary minus */
-DoubleVec operator-(DoubleVec vec)
+FloatVec operator-(FloatVec vec)
 {   
     for (int i = 0; i < vec._vec.size(); ++i) {
         vec[i] *= -1;
@@ -123,14 +123,14 @@ DoubleVec operator-(DoubleVec vec)
 }
 
 /* matrix addition and subtraction */
-DoubleVec operator+(DoubleVec first, const DoubleVec& second)
+FloatVec operator+(FloatVec first, const FloatVec& second)
 { return first += second; }
 
-DoubleVec operator-(DoubleVec first, const DoubleVec& second)
+FloatVec operator-(FloatVec first, const FloatVec& second)
 { return first -= second; }
 
 /* dot product */
-float operator*(const DoubleVec& first, const DoubleVec& second)
+float operator*(const FloatVec& first, const FloatVec& second)
 {
     first.compareSizes(second);
     float result = 0;
@@ -141,20 +141,20 @@ float operator*(const DoubleVec& first, const DoubleVec& second)
 }
 
 /* Multiplication and division by scalar */
-DoubleVec operator*(DoubleVec vec, float scalar)
+FloatVec operator*(FloatVec vec, float scalar)
 { return vec *= scalar; }
 
-DoubleVec operator*(float scalar, DoubleVec vec)
+FloatVec operator*(float scalar, FloatVec vec)
 { return vec *= scalar; }
 
-DoubleVec operator/(DoubleVec vec, float scalar)
+FloatVec operator/(FloatVec vec, float scalar)
 { return vec /= scalar; }
 
-DoubleVec operator/(float scalar, DoubleVec vec)
+FloatVec operator/(float scalar, FloatVec vec)
 { return vec /= scalar; }
 
 /* Squares the inside values */
-DoubleVec square_inside(DoubleVec vec)
+FloatVec square_inside(FloatVec vec)
 {
     for (int i = 0; i < vec.size(); ++i) {
         vec[i] *= vec[i];
@@ -163,7 +163,7 @@ DoubleVec square_inside(DoubleVec vec)
 }
 
 /* Compute sqrt of the inside values */
-DoubleVec sqrt_inside(DoubleVec vec)
+FloatVec sqrt_inside(FloatVec vec)
 {
     for (int i = 0; i < vec.size(); ++i) {
         vec[i] = std::sqrt(vec[i]);
@@ -172,7 +172,7 @@ DoubleVec sqrt_inside(DoubleVec vec)
 }
 
 /* adds scalar to every item in vector */
-DoubleVec add_scalar_to_all_items(DoubleVec vec, float d)
+FloatVec add_scalar_to_all_items(FloatVec vec, float d)
 {      
     for (int i = 0; i < vec.size(); ++i) {
         vec[i] += d;
@@ -181,7 +181,7 @@ DoubleVec add_scalar_to_all_items(DoubleVec vec, float d)
 }
 
 /* divides vectors by items */
-DoubleVec divide_by_items(DoubleVec first, const DoubleVec& second)
+FloatVec divide_by_items(FloatVec first, const FloatVec& second)
 {      
     assert(first.size() == second.size());
     for (int i = 0; i < first.size(); ++i) {
@@ -196,7 +196,7 @@ DoubleVec divide_by_items(DoubleVec first, const DoubleVec& second)
  *      compiler will do the rest (Preferably by DEBUG macro )
  * @param other 
  */
-void DoubleVec::compareSizes(const DoubleVec& other) const {  
+void FloatVec::compareSizes(const FloatVec& other) const {  
     #ifdef DEBUG
     if (size() != other.size()) {
         throw std::length_error("Vectors have different length");
@@ -209,16 +209,16 @@ void DoubleVec::compareSizes(const DoubleVec& other) const {
  * Matrix of floats with all necessary operators defined 
  */
 
-class DoubleMat
+class FloatMat
 {
-    std::vector<DoubleVec> _matrix_rows;
+    std::vector<FloatVec> _matrix_rows;
 public:
     /* construct a zero matrix */
-    explicit DoubleMat(int rows, int columns) : _matrix_rows(rows, DoubleVec(columns)) {}
+    explicit FloatMat(int rows, int columns) : _matrix_rows(rows, FloatVec(columns)) {}
 
-    /* construct a DoubleMat from given vectors of DoubleVec */
-    explicit DoubleMat(const std::vector<DoubleVec> &rows) : _matrix_rows(rows) {}
-    explicit DoubleMat(const std::vector<DoubleVec> &&rows) : _matrix_rows(std::move(rows)) {}
+    /* construct a FloatMat from given vectors of FloatVec */
+    explicit FloatMat(const std::vector<FloatVec> &rows) : _matrix_rows(rows) {}
+    explicit FloatMat(const std::vector<FloatVec> &&rows) : _matrix_rows(std::move(rows)) {}
 
     int row_num() const
     { return _matrix_rows.size(); }
@@ -226,23 +226,23 @@ public:
     int col_num() const
     { return (row_num() == 0) ? 0 : _matrix_rows[0].size(); }
 
-    bool same_dimensions(const DoubleMat &other) const
+    bool same_dimensions(const FloatMat &other) const
     { return col_num() == other.col_num() && row_num() == other.row_num(); }
 
     /* Direct access to the COPY of column and row vectors
      * The ‹n› is index from top (row) or left (column) */
 
-    DoubleVec row( int n ) const
+    FloatVec row( int n ) const
     { 
         assert(n >= 0 && n <= row_num() - 1);
         return _matrix_rows[n];
     }
 
-    DoubleVec col( int n ) const
+    FloatVec col( int n ) const
     {
         assert(n >= 0 && col_num() >= n + 1);
 
-        DoubleVec column(row_num());
+        FloatVec column(row_num());
         for (int i = 0; i < row_num(); ++i) {
             column[i] = _matrix_rows[i][n];
         }
@@ -250,27 +250,27 @@ public:
     }
 
     /* relational operators */
-    bool operator==(const DoubleMat &other) const
+    bool operator==(const FloatMat &other) const
     { return _matrix_rows == other._matrix_rows; }
 
-    bool operator!=(const DoubleMat &other) const
+    bool operator!=(const FloatMat &other) const
     { return _matrix_rows != other._matrix_rows; }
 
     /* constant / non-constant indexing to get or change the row vectors */
-    DoubleVec operator[](int n) const
+    FloatVec operator[](int n) const
     { 
         assert(n >= 0 && n <= row_num() - 1);
         return _matrix_rows[n]; 
     }
 
-    DoubleVec &operator[](int n)
+    FloatVec &operator[](int n)
     { 
         assert(n >= 0 && n <= row_num() - 1);
         return _matrix_rows[n]; 
     }
 
     /* matrix addition and subtraction */
-    DoubleMat &operator+=(const DoubleMat &other)
+    FloatMat &operator+=(const FloatMat &other)
     {        
         assert(same_dimensions(other));
         for (int i = 0; i < row_num(); ++i) {
@@ -279,7 +279,7 @@ public:
         return *this;
     }
 
-    DoubleMat &operator-=(const DoubleMat &other)
+    FloatMat &operator-=(const FloatMat &other)
     {
         assert(same_dimensions(other));
         for (int i = 0; i < row_num(); ++i) {
@@ -289,7 +289,7 @@ public:
     }
 
     /* multiplying by a scalar */
-    DoubleMat &operator*=(float scal)
+    FloatMat &operator*=(float scal)
     {
         for (int i = 0; i < row_num(); ++i) {
             _matrix_rows[i] *= scal;
@@ -298,7 +298,7 @@ public:
     }
 
     /* dividing by a scalar */
-    DoubleMat &operator/=(float scal)
+    FloatMat &operator/=(float scal)
     {
         for (int i = 0; i < row_num(); ++i) {
             _matrix_rows[i] /= scal;
@@ -308,12 +308,12 @@ public:
 
     // having *= for matrix product does not make sense
 
-    friend DoubleMat square_inside(DoubleMat mat);
+    friend FloatMat square_inside(FloatMat mat);
 
-    friend DoubleMat add_scalar_to_all_items(DoubleMat mat, float d);
+    friend FloatMat add_scalar_to_all_items(FloatMat mat, float d);
 
     /* adds given vector to all rows */
-    DoubleMat &add_vec_to_all_rows(const DoubleVec &vec)
+    FloatMat &add_vec_to_all_rows(const FloatVec &vec)
     {        
         assert(vec.size() == col_num());
         for (int i = 0; i < row_num(); ++i) {
@@ -323,9 +323,9 @@ public:
     }
 
     /* get a transpose of the matrix */
-    DoubleMat transpose() const
+    FloatMat transpose() const
     {
-        auto transp = DoubleMat(col_num(), row_num());
+        auto transp = FloatMat(col_num(), row_num());
         for (int i = 0; i < col_num(); ++i) {
             transp[i] = col(i);
         }
@@ -333,11 +333,11 @@ public:
     }
 
     /* Computes dot product of row of first matrix and col of second matrix */
-    friend float dot_row_col(const DoubleMat& first, const DoubleMat& second, int row, int col);
+    friend float dot_row_col(const FloatMat& first, const FloatMat& second, int row, int col);
 
     /* Multiplies two matrices, the result is saved inside this matrix 
        Does not waste time or space */
-    DoubleMat& save_multiplication(const DoubleMat& first, const DoubleMat& second)
+    FloatMat& save_multiplication(const FloatMat& first, const FloatMat& second)
     {
         assert(first.col_num() == second.row_num());
         assert(first.row_num() == this->row_num() && second.col_num() == this->col_num());
@@ -350,7 +350,7 @@ public:
 
     /* Multiplies TRANSPONED first matrix with second, the result is saved inside this matrix 
        Does not waste time or space */
-    DoubleMat& save_multiplication_transponse_first(const DoubleMat& first, const DoubleMat& second)
+    FloatMat& save_multiplication_transponse_first(const FloatMat& first, const FloatMat& second)
     {
         assert(first.row_num() == second.row_num());
         assert(first.col_num() == this->row_num() && second.col_num() == this->col_num());
@@ -368,7 +368,7 @@ public:
 
     /* Multiplies first matrix with TRANSPONED second, the result is saved inside this matrix 
        Does not waste time or space */
-    DoubleMat& save_multiplication_transponse_second(const DoubleMat& first, const DoubleMat& second)
+    FloatMat& save_multiplication_transponse_second(const FloatMat& first, const FloatMat& second)
     {
         assert(first.col_num() == second.col_num());
         assert(first.row_num() == this->row_num() && second.row_num() == this->col_num());
@@ -385,15 +385,15 @@ public:
     }
 
     /* iterators */
-    std::vector<DoubleVec>::iterator begin() { return _matrix_rows.begin(); }
-    std::vector<DoubleVec>::iterator end() { return _matrix_rows.end(); }
+    std::vector<FloatVec>::iterator begin() { return _matrix_rows.begin(); }
+    std::vector<FloatVec>::iterator end() { return _matrix_rows.end(); }
 
-    std::vector<DoubleVec>::const_iterator begin() const { return _matrix_rows.begin(); }
-    std::vector<DoubleVec>::const_iterator end() const { return _matrix_rows.end(); }
+    std::vector<FloatVec>::const_iterator begin() const { return _matrix_rows.begin(); }
+    std::vector<FloatVec>::const_iterator end() const { return _matrix_rows.end(); }
 };
 
 /* Computes dot product of row of first matrix and col of second matrix */
-float dot_row_col(const DoubleMat& first, const DoubleMat& second, int row, int col)
+float dot_row_col(const FloatMat& first, const FloatMat& second, int row, int col)
 {
     assert(first.col_num() == second.row_num());
     float res = 0.;
@@ -404,7 +404,7 @@ float dot_row_col(const DoubleMat& first, const DoubleMat& second, int row, int 
 }
 
 /* Computes dot product of row of matrix and vector */
-float dot_row_vec(const DoubleMat& mat, const DoubleVec& vec, int row)
+float dot_row_vec(const FloatMat& mat, const FloatVec& vec, int row)
 {
     assert(mat.col_num() == vec.size());
     float res = 0.;
@@ -415,7 +415,7 @@ float dot_row_vec(const DoubleMat& mat, const DoubleVec& vec, int row)
 }
 
 /* Computes dot product of vector and col of matrix */
-float dot_vec_col(const DoubleVec& vec, const DoubleMat& mat, int col)
+float dot_vec_col(const FloatVec& vec, const FloatMat& mat, int col)
 {
     assert(vec.size() == mat.row_num());
     float res = 0.;
@@ -426,34 +426,34 @@ float dot_vec_col(const DoubleVec& vec, const DoubleMat& mat, int col)
 }
 
 /* matrix addition and subtraction */
-DoubleMat operator+(DoubleMat x, const DoubleMat &y)
+FloatMat operator+(FloatMat x, const FloatMat &y)
 { return x += y; }
 
-DoubleMat operator-(DoubleMat x, const DoubleMat &y)
+FloatMat operator-(FloatMat x, const FloatMat &y)
 { return x -= y; }
 
 /* multiplication of a matrix by a scalar - both sides */
-DoubleMat operator*(DoubleMat m, float scalar)
+FloatMat operator*(FloatMat m, float scalar)
 { return m *= scalar; }
 
-DoubleMat operator*(float scalar, DoubleMat m)
+FloatMat operator*(float scalar, FloatMat m)
 { return m *= scalar; }
 
 /* division of a matrix by a scalar - both sides */
-DoubleMat operator/(DoubleMat m, float scalar)
+FloatMat operator/(FloatMat m, float scalar)
 { return m /= scalar; }
 
-DoubleMat operator/(float scalar, DoubleMat m)
+FloatMat operator/(float scalar, FloatMat m)
 { return m /= scalar; }
 
 /* multiplication of a vector by a matrix - both sides 
  * if vector is first param, it is considered as [1, n] matrix
  * if vector is second param, it is considered as [n,1] matrix */
 // TODO optimize
-DoubleVec operator*(DoubleVec v, const DoubleMat &m)
+FloatVec operator*(FloatVec v, const FloatMat &m)
 { 
     assert(m.row_num() == v.size());
-    auto result = DoubleVec(m.col_num());
+    auto result = FloatVec(m.col_num());
 
     for (int i = 0; i < m.col_num(); ++i) {
         result[i] = v * m.col(i);
@@ -462,10 +462,10 @@ DoubleVec operator*(DoubleVec v, const DoubleMat &m)
 }
 
 // TODO optimize
-DoubleVec operator*(const DoubleMat &m, DoubleVec v)
+FloatVec operator*(const FloatMat &m, FloatVec v)
 { 
     assert(m.col_num() == v.size());
-    auto result = DoubleVec(m.row_num());
+    auto result = FloatVec(m.row_num());
 
     for (int i = 0; i < m.row_num(); ++i) {
         result[i] = m.row(i) * v;
@@ -475,10 +475,10 @@ DoubleVec operator*(const DoubleMat &m, DoubleVec v)
 
 /* multiplication of compatible matrices */
 // TODO optimize
-DoubleMat operator*(const DoubleMat &first, const DoubleMat &second)
+FloatMat operator*(const FloatMat &first, const FloatMat &second)
 { 
     assert(first.col_num() == second.row_num());
-    auto result = DoubleMat(first.row_num(), second.col_num());
+    auto result = FloatMat(first.row_num(), second.col_num());
 
     for (int i = 0; i < first.row_num(); ++i) {
         for (int j = 0; j < second.col_num(); ++j) {
@@ -489,7 +489,7 @@ DoubleMat operator*(const DoubleMat &first, const DoubleMat &second)
 }
 
 /* Squares the inside values */
-DoubleMat square_inside(DoubleMat mat)
+FloatMat square_inside(FloatMat mat)
 {
     for (int i = 0; i < mat.row_num(); ++i) {
         mat[i] = square_inside(mat[i]);
@@ -498,7 +498,7 @@ DoubleMat square_inside(DoubleMat mat)
 }
 
 /* Compute sqrt of the inside values */
-DoubleMat sqrt_inside(DoubleMat mat)
+FloatMat sqrt_inside(FloatMat mat)
 {
     for (int i = 0; i < mat.row_num(); ++i) {
         mat[i] = sqrt_inside(mat[i]);
@@ -507,7 +507,7 @@ DoubleMat sqrt_inside(DoubleMat mat)
 }
 
 /* adds given vector to all rows */
-DoubleMat add_scalar_to_all_items(DoubleMat mat, float d)
+FloatMat add_scalar_to_all_items(FloatMat mat, float d)
 {        
     for (int i = 0; i < mat.row_num(); ++i) {
         mat[i] = std::move(add_scalar_to_all_items(mat[i], d));
@@ -516,7 +516,7 @@ DoubleMat add_scalar_to_all_items(DoubleMat mat, float d)
 }
 
 /* divides matrices by items */
-DoubleMat divide_by_items(DoubleMat first, const DoubleMat& second)
+FloatMat divide_by_items(FloatMat first, const FloatMat& second)
 {      
     assert(first.col_num() == second.col_num() && first.row_num() == second.row_num());
     for (int i = 0; i < first.row_num(); ++i) {
@@ -526,7 +526,7 @@ DoubleMat divide_by_items(DoubleMat first, const DoubleMat& second)
 }
 
 /* printing a matrix, float printed to 4 decimal places */
-inline void print_matrix(const DoubleMat &m)
+inline void print_matrix(const FloatMat &m)
 {
     std::cout << std::setprecision(4) << std::fixed;
 

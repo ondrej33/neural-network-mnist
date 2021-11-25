@@ -6,14 +6,14 @@
 /* Loads inputs from given file, arranges by lines, one line must contain "nums_per_line" numbers
  * TODO: maybe load them as >char< type? they are just numbers 0-255
  */
-std::unique_ptr<std::vector<std::unique_ptr<DoubleVec>>> get_inputs(std::string file_name, int nums_per_line) {
+std::unique_ptr<std::vector<std::unique_ptr<FloatVec>>> get_inputs(std::string file_name, int nums_per_line) {
     std::ifstream infile(file_name);
-    auto data = std::make_unique<std::vector<std::unique_ptr<DoubleVec>>>();
+    auto data = std::make_unique<std::vector<std::unique_ptr<FloatVec>>>();
     std::string line;
     while (std::getline(infile, line))
     {
         std::stringstream line_stream(line);
-        auto vec_ptr = std::make_unique<DoubleVec>();
+        auto vec_ptr = std::make_unique<FloatVec>();
         // input vectors look just like "8,0,220,44,...,26,2"
         for (float num; line_stream >> num;) {
             vec_ptr->push_back(num);    
@@ -46,7 +46,7 @@ std::unique_ptr<std::vector<int>> get_labels(std::string file_name) {
 
 struct VecLabelPair
 {
-    DoubleVec input_vec;
+    FloatVec input_vec;
     int label;
 };
 
