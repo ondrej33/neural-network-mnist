@@ -55,15 +55,14 @@ public:
     
     void apply_activation(DoubleMat& batch_mat) override { 
         for (auto& vec : batch_mat) {
-            DoubleVec exponents(vec.size());
             float sum = 0.;
             for (int i = 0; i < vec.size(); ++i) {
-                exponents[i] = std::exp(vec[i]);
-                sum += exponents[i];
+                vec[i] = std::exp(vec[i]);
+                sum += vec[i];
             }
 
             for (int i = 0; i < vec.size(); ++i) {
-                vec[i] = exponents[i] / sum;
+                vec[i] = vec[i] / sum;
             }
         }
     }
