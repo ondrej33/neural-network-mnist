@@ -114,6 +114,7 @@ public:
         _deriv_weights = outputs_prev_layer.transpose() * received_vals;
 
         // for bias derivs, we just sum through the samples
+        _deriv_biases = FloatVec(num_neurons());
         for (int i = 0; i < batch_size(); ++i) {
             for (int j = 0; j < _biases.size(); ++j) {
                 _deriv_biases[j] += received_vals[i][j];

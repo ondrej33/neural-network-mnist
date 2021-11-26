@@ -39,7 +39,10 @@
 data/
 java_evaluator/
 python_evaluator/
+
+# random backup (different version) files/dirs
 updated_computations/
+include_new_copy/
 
 build
 
