@@ -12,11 +12,16 @@ class ActivationFunction
 public: 
     ActivationFunction() = default; 
    
-    /* Applies activation fn on every sample vector */
+    /* Applies activation fn on every sample vector in batch */
     virtual void apply_activation(FloatMat& batch_mat) { }
-
-    /* Applies activation fn on every sample vector */
+    /* Applies derivation fn on every sample vector in batch */
     virtual void apply_derivation(FloatMat& batch_mat) { }
+
+    /* Applies activation fn on every item in input vector */
+    virtual void apply_activation(FloatVec& vec) { }
+    /* Applies derivation fn on every item in input vector */
+    virtual void apply_derivation(FloatVec& vec) { }
+
 
     virtual ~ActivationFunction() = default;
 };
@@ -28,7 +33,7 @@ float relu_deriv(float x) { return (x > 0) ? 1. : 0.; }
 /* Class representing RELU activation function */
 class ReluFunction : public ActivationFunction
 {
-    /* Applies activation fn on every input of every sample vector */
+    /* Applies activation fn on every input of every sample matrix */
     void apply_function(FloatMat& batch_mat, std::function<float(float)> fn) const
     {
         for (int i = 0; i < batch_mat.row_num(); ++i) {
@@ -38,12 +43,24 @@ class ReluFunction : public ActivationFunction
         }
     }
 
+    /* Applies activation fn on every item of input vector */
+    void apply_function(FloatVec& vec, std::function<float(float)> fn) const
+    {
+        for (int i = 0; i < vec.size(); ++i) {
+            vec[i] = fn(vec[i]);
+        }
+    }
+
 public: 
     ReluFunction() = default;
     
+    // version for whole batch at once
     void apply_activation(FloatMat& batch_mat) override { apply_function(batch_mat, relu); }
-
     void apply_derivation(FloatMat& batch_mat) override { apply_function(batch_mat, relu_deriv); }
+
+    // version for one input at time
+    void apply_activation(FloatVec& vec) override { apply_function(vec, relu); }
+    void apply_derivation(FloatVec& vec) override { apply_function(vec, relu_deriv); }
 };
 
 
@@ -53,6 +70,7 @@ class SoftmaxFunction : public ActivationFunction
 public: 
     SoftmaxFunction() = default;
     
+    // version for whole batch at once
     void apply_activation(FloatMat& batch_mat) override { 
         for (auto& vec : batch_mat) {
             float sum = 0.;
@@ -66,6 +84,20 @@ public:
             }
         }
     }
+
+    // version for one input at time
+    void apply_activation(FloatVec& vec) override { 
+        float sum = 0.;
+        for (int i = 0; i < vec.size(); ++i) {
+            vec[i] = std::exp(vec[i]);
+            sum += vec[i];
+        }
+
+        for (int i = 0; i < vec.size(); ++i) {
+            vec[i] = vec[i] / sum;
+        }
+    }
+
 
     /**
      * We will NOT specify "apply_derivation" function

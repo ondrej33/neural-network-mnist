@@ -220,6 +220,10 @@ public:
     explicit FloatMat(const std::vector<FloatVec> &rows) : _matrix_rows(rows) {}
     explicit FloatMat(const std::vector<FloatVec> &&rows) : _matrix_rows(std::move(rows)) {}
 
+    /* "convert" one vector to matrix - either one-row matrix or one-column matrix */
+    friend FloatMat row_mat_from_vec(const FloatVec &vec);
+    friend FloatMat col_mat_from_vec(const FloatVec &vec);
+
     int row_num() const
     { return _matrix_rows.size(); }
 
@@ -391,6 +395,16 @@ public:
     std::vector<FloatVec>::const_iterator begin() const { return _matrix_rows.begin(); }
     std::vector<FloatVec>::const_iterator end() const { return _matrix_rows.end(); }
 };
+
+/* "convert" one vector to matrix - either one-row matrix or one-column matrix */
+FloatMat row_mat_from_vec(const FloatVec &vec)
+{
+    return FloatMat(std::vector<FloatVec>{vec});
+}
+FloatMat col_mat_from_vec(const FloatVec &vec)
+{
+    return FloatMat(std::vector<FloatVec>{vec}).transpose();
+}
 
 /* Computes dot product of row of first matrix and col of second matrix */
 float dot_row_col(const FloatMat& first, const FloatMat& second, int row, int col)
