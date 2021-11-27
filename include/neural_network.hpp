@@ -25,7 +25,7 @@ class NeuralNetwork
     std::vector<std::unique_ptr<Layer>> _layers;
 
     /* training vectors and their labels */
-    std::unique_ptr<std::vector<std::unique_ptr<VecLabelPair>>> _train_data_ptr = nullptr;
+    std::vector<VecLabelPair> _train_data;
 
     /* output file stream for TRAINING predictions */
     std::ofstream _training_output_file;
@@ -82,7 +82,7 @@ public:
     /* Puts new data and labels instead of old ones */
     void load_train_data(std::string vector_file, std::string label_file, std::string output)
     {
-        _train_data_ptr = std::move(load_vectors_labels(vector_file, label_file, _topology[0]));
+        _train_data = std::move(load_vectors_labels(vector_file, label_file, _topology[0]));
         _training_output_file.open(output);
     }
 
@@ -147,7 +147,8 @@ public:
         // TODO: optimize
         _layers[layers_num() - 1]->_deriv_weights = outputs_prev_layer.transpose() * received_vals;
 
-        // for bias derivs, we just sum through the samples
+        // for bias derivs, we just sum through the samples (first annulate values)
+        _layers[layers_num() - 1]->_deriv_biases = std::move(FloatVec(_layers[layers_num() - 1]->_deriv_biases.size()));
         for (int i = 0; i < _batch_size; ++i) {
             for (int j = 0; j < _layers[layers_num() - 1]->_biases.size(); ++j) {
                 _layers[layers_num() - 1]->_deriv_biases[j] += received_vals[i][j];
@@ -218,7 +219,7 @@ public:
      * for every epoch always iterates through examples using batches */
     void train_network()
     {
-        int num_examples = _train_data_ptr->size();
+        int num_examples = _train_data.size();
         // we will ignore last few examples in every epoch (it is randomly shuffled, so its probably OK)
         int batches_total = num_examples / _batch_size;
              
@@ -228,11 +229,11 @@ public:
 
             for (int batch_num = 0; batch_num < batches_total; ++batch_num) {
                 // Randomly shuffle (both vectors+labels) and then take batches sequentially
-                std::random_shuffle (_train_data_ptr->begin(), _train_data_ptr->end());
+                std::random_shuffle (_train_data.begin(), _train_data.end());
 
                 // extract the examples for current batch of inputs+labels from training data
                 for (int j = 0; j < _batch_size; ++j) {
-                    VecLabelPair& pair = *(*_train_data_ptr)[(i * _batch_size + j) % num_examples];
+                    VecLabelPair& pair = _train_data[(i * _batch_size + j) % num_examples];
                     _input_batch[j] = pair.input_vec / 255; // normalize inputs
                     _batch_labels[j] = pair.label;
                 }
@@ -245,9 +246,8 @@ public:
             }
          }
 
-        // TODO: evaluate train vectors and get rid of training values (we can move the ptr now)
-        //predict_labels_to_file(_training_output_file, std::move(_train_data_ptr));
-        _train_data_ptr = nullptr;
+        // TODO: evaluate train vectors and get rid of training values (we can move them now)
+        //predict_labels_to_file(_training_output_file, std::move(_train_data));
     }
 
     /* Checks the network output and returns percentage of correctly labeled samples */
@@ -302,10 +302,10 @@ public:
 
     /* Prints label prediction for every input vector to given file */
     void predict_labels_to_file(std::ofstream& file, 
-        std::unique_ptr<std::vector<std::unique_ptr<FloatVec>>> input_vectors)
+        std::vector<FloatVec> input_vectors)
     {
-        for (int i = 0; i < input_vectors->size(); ++i) {
-            FloatVec& input_vec = *(*input_vectors)[i];
+        for (int i = 0; i < input_vectors.size(); ++i) {
+            FloatVec& input_vec = input_vectors[i];
             int label = predict_one_label(input_vec);
             file << label << "\n";
         }
@@ -314,10 +314,10 @@ public:
     /* Prints label prediction for every input vector to given file
      * similar as function above, but works for VecLabelPair that we use */
     void predict_labels_to_file(std::ofstream& file, 
-        std::unique_ptr<std::vector<std::unique_ptr<VecLabelPair>>> input_data)
+        std::vector<VecLabelPair> input_data)
     {
-        for (int i = 0; i < input_data->size(); ++i) {
-            auto& vec = (*input_data)[i]->input_vec;
+        for (int i = 0; i < input_data.size(); ++i) {
+            auto& vec = input_data[i].input_vec;
             int label = predict_one_label(vec);
             file << label << "\n";
         }

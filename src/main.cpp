@@ -17,7 +17,7 @@ int main() {
 
     std::vector<int> topology{784,64,10};
     constexpr double learn_rate = 0.003;
-    constexpr int num_epochs = 2;
+    constexpr int num_epochs = 1;
     constexpr int batch_size = 64;    
     constexpr int epochs_learn_decay = 2;
     constexpr double epsilon = 1e-7;
