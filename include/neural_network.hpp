@@ -22,7 +22,7 @@ class NeuralNetwork
     std::vector<int> _batch_labels;
 
     /* vector of hidden and output layers */
-    std::vector<std::unique_ptr<Layer>> _layers;
+    std::vector<Layer> _layers;
 
     /* training vectors and their labels */
     std::vector<VecLabelPair> _train_data;
@@ -63,12 +63,10 @@ public:
         // we dont want to have explicit layer for inputs
         // and we will initiate last layer separately
         for (int i = 1; i < _topology.size() - 1; ++i) {
-            _layers.push_back(std::make_unique<Layer>(_batch_size, _topology[i], _topology[i-1], relu_fn));
+            _layers.push_back(Layer(_batch_size, _topology[i], _topology[i-1], relu_fn));
         }
         // last layer will have soft_max function
-        _layers.push_back(std::make_unique<Layer>(
-            _batch_size, _topology[_topology.size() - 1], _topology[_topology.size()-2], soft_fn
-        ));
+        _layers.push_back(Layer(_batch_size, _topology[_topology.size() - 1], _topology[_topology.size()-2], soft_fn));
 
         // load the train data
         load_train_data(train_vectors, train_labels, train_output);
@@ -90,11 +88,11 @@ public:
     void forward_pass()
     {
         // initial layer is input, so lets use it to initiate first
-        _layers[0]->forward(_input_batch);
+        _layers[0].forward(_input_batch);
 
         // now all other layers
         for (int i = 1; i < layers_num(); ++i) {
-            _layers[i]->forward(_layers[i - 1]->_output_values);
+            _layers[i].forward(_layers[i - 1]._output_values);
         }
     }
 
@@ -105,7 +103,7 @@ public:
         // we can ignore others, they would be 0 in hot-1-coded vectors
         float sum = 0.;
         for (int i = 0; i < _batch_size; ++i) {
-            float correct_val_from_vector = _layers[layers_num() - 1]->_output_values[i][_batch_labels[i]];
+            float correct_val_from_vector = _layers[layers_num() - 1]._output_values[i][_batch_labels[i]];
             // check if dont have 0, otherwise give some small value (same for 1 for symmetry)
             if (correct_val_from_vector < 1.0e-7) {
                 correct_val_from_vector = 1.0e-7;
@@ -126,7 +124,7 @@ public:
     {
         // lets start by computing derivations of "Softmax AND CrossEntropy" (together) wrt. Softmax inputs
         // thats easy, we just need those outputs and target labels
-        FloatMat softmax_outputs = _layers[layers_num() - 1]->_output_values;
+        FloatMat softmax_outputs = _layers[layers_num() - 1]._output_values;
         
         // and subtract 1 on indices of true target
         for (int i = 0; i < _batch_size; ++i) {
@@ -143,21 +141,21 @@ public:
         // just an alias for easier understanding
         FloatMat& received_vals = softmax_outputs;
         
-        const FloatMat& outputs_prev_layer = (layers_num() == 1) ? _input_batch : _layers[layers_num() - 2]->_output_values;
+        const FloatMat& outputs_prev_layer = (layers_num() == 1) ? _input_batch : _layers[layers_num() - 2]._output_values;
         // TODO: optimize
-        _layers[layers_num() - 1]->_deriv_weights = outputs_prev_layer.transpose() * received_vals;
+        _layers[layers_num() - 1]._deriv_weights = outputs_prev_layer.transpose() * received_vals;
 
         // for bias derivs, we just sum through the samples (first annulate values)
-        _layers[layers_num() - 1]->_deriv_biases = std::move(FloatVec(_layers[layers_num() - 1]->_deriv_biases.size()));
+        _layers[layers_num() - 1]._deriv_biases = std::move(FloatVec(_layers[layers_num() - 1]._deriv_biases.size()));
         for (int i = 0; i < _batch_size; ++i) {
-            for (int j = 0; j < _layers[layers_num() - 1]->_biases.size(); ++j) {
-                _layers[layers_num() - 1]->_deriv_biases[j] += received_vals[i][j];
+            for (int j = 0; j < _layers[layers_num() - 1]._biases.size(); ++j) {
+                _layers[layers_num() - 1]._deriv_biases[j] += received_vals[i][j];
             }
         }
 
         // for derivation wrt. inputs, we multiply received values through the weigths (transponed to make it ok)
         // TODO: optimize
-        _layers[layers_num() - 1]->_deriv_inputs = received_vals * _layers[layers_num() - 1]->_weights_in.transpose();
+        _layers[layers_num() - 1]._deriv_inputs = received_vals * _layers[layers_num() - 1]._weights_in.transpose();
     }
 
     
@@ -171,10 +169,10 @@ public:
 
         // now all other hidden layers except first, which is also different
         for (int i = layers_num() - 2; i > 0; --i) {
-            _layers[i]->backward_hidden(_layers[i + 1]->_deriv_inputs, _layers[i - 1]->_output_values);
+            _layers[i].backward_hidden(_layers[i + 1]._deriv_inputs, _layers[i - 1]._output_values);
         }
         // first hidden layer takes directly inputs
-        _layers[0]->backward_hidden(_layers[1]->_deriv_inputs, _input_batch);
+        _layers[0].backward_hidden(_layers[1]._deriv_inputs, _input_batch);
     }
 
     /* Update weights and biases using previously computed gradients 
@@ -183,26 +181,26 @@ public:
     {
         for (int i = 0; i < layers_num(); ++i) {
             // first update momentum using computed gradients
-            _layers[i]->_momentum_weights = _beta1 * _layers[i]->_momentum_weights + (1 - _beta1) * _layers[i]->_deriv_weights;
-            _layers[i]->_momentum_biases = _beta1 * _layers[i]->_momentum_biases + (1 - _beta1) * _layers[i]->_deriv_biases;
+            _layers[i]._momentum_weights = _beta1 * _layers[i]._momentum_weights + (1 - _beta1) * _layers[i]._deriv_weights;
+            _layers[i]._momentum_biases = _beta1 * _layers[i]._momentum_biases + (1 - _beta1) * _layers[i]._deriv_biases;
 
             // compute corrected momentum (without this, it would be biased in early iterations)
             float correction = 1. - std::pow(_beta1, iteration + 1);
-            auto better_momentum_weights = _layers[i]->_momentum_weights / correction;
-            auto better_momentum_biases = _layers[i]->_momentum_biases / correction;
+            auto better_momentum_weights = _layers[i]._momentum_weights / correction;
+            auto better_momentum_biases = _layers[i]._momentum_biases / correction;
 
             // also update cache with squared gradients
-            _layers[i]->_cached_weights = _beta2 * _layers[i]->_cached_weights + (1 - _beta2) * square_inside(_layers[i]->_deriv_weights);
-            _layers[i]->_cached_biases = _beta2 * _layers[i]->_cached_biases + (1 - _beta2) * square_inside(_layers[i]->_deriv_biases);
+            _layers[i]._cached_weights = _beta2 * _layers[i]._cached_weights + (1 - _beta2) * square_inside(_layers[i]._deriv_weights);
+            _layers[i]._cached_biases = _beta2 * _layers[i]._cached_biases + (1 - _beta2) * square_inside(_layers[i]._deriv_biases);
 
             // again compute corrected cache (without this, it would be biased in early iterations)
             float correction2 = 1. - std::pow(_beta2, iteration + 1);
-            auto better_cached_weights = _layers[i]->_cached_weights / correction2;
-            auto better_cached_biases = _layers[i]->_cached_biases / correction2;
+            auto better_cached_weights = _layers[i]._cached_weights / correction2;
+            auto better_cached_biases = _layers[i]._cached_biases / correction2;
 
             // finally update the parameters
-            _layers[i]->_weights_in += divide_by_items((-learn_rate * better_momentum_weights), (add_scalar_to_all_items(sqrt_inside(better_cached_weights), _epsilon)));
-            _layers[i]->_biases += divide_by_items((-learn_rate * better_momentum_biases), (add_scalar_to_all_items(sqrt_inside(better_cached_biases), _epsilon)));
+            _layers[i]._weights_in += divide_by_items((-learn_rate * better_momentum_weights), (add_scalar_to_all_items(sqrt_inside(better_cached_weights), _epsilon)));
+            _layers[i]._biases += divide_by_items((-learn_rate * better_momentum_biases), (add_scalar_to_all_items(sqrt_inside(better_cached_biases), _epsilon)));
         }
     }
 
@@ -259,7 +257,7 @@ public:
             int label = 0;
             float largest = 0.;
             for (int i = 0; i < classes_num(); ++i) {
-                float label_i_prob = _layers[layers_num() - 1]->_output_values[sample_num][i];
+                float label_i_prob = _layers[layers_num() - 1]._output_values[sample_num][i];
                 if (label_i_prob > largest) {
                     largest = label_i_prob;
                     label = i;
@@ -279,19 +277,19 @@ public:
         input_vec /= 255.;
 
         // initial layer is input, so lets use it to initiate first
-        _layers[0]->forward(FloatMat(std::vector<FloatVec>{input_vec}));
+        _layers[0].forward(FloatMat(std::vector<FloatVec>{input_vec}));
 
         // now all other layers
         for (int i = 1; i < layers_num(); ++i) {
-            _layers[i]->forward(_layers[i - 1]->_output_values);
+            _layers[i].forward(_layers[i - 1]._output_values);
         }
-        assert(_layers[layers_num() - 1]->_output_values.row_num() == 1); // only one sample in "batch"
+        assert(_layers[layers_num() - 1]._output_values.row_num() == 1); // only one sample in "batch"
 
         // find the output label (largest of the softmax values)
         int label = 0;
         float largest = 0.;
         for (int i = 0; i < classes_num(); ++i) {
-            float label_i_prob = _layers[layers_num() - 1]->_output_values[0][i];
+            float label_i_prob = _layers[layers_num() - 1]._output_values[0][i];
             if (label_i_prob > largest) {
                 largest = label_i_prob;
                 label = i;
@@ -337,10 +335,10 @@ public:
     {
         std::cout << std::setprecision(4) << std::fixed;
         for (int i = layers_num() - 1; i >= 0; --i) {
-            for (int j = 0; j < _layers[i]->_weights_in.col_num(); ++j) {
+            for (int j = 0; j < _layers[i]._weights_in.col_num(); ++j) {
                 std::cout << "[ ";
-                for (int k = 0; k < _layers[i]->_weights_in.row_num(); ++k) {
-                    std::cout << _layers[i]->_weights_in[k][j] << " ";
+                for (int k = 0; k < _layers[i]._weights_in.row_num(); ++k) {
+                    std::cout << _layers[i]._weights_in[k][j] << " ";
                 }
                 std::cout << "] ";
             }
@@ -357,7 +355,7 @@ public:
     {
         std::cout << std::setprecision(4) << std::fixed;
         for (int i = layers_num() - 1; i >= 0; --i) {
-            for (const auto& neuron_vec: _layers[i]->get_outputs()) {
+            for (const auto& neuron_vec: _layers[i].get_outputs()) {
                 std::cout << "[";
                 for (int j = 0; j < neuron_vec.size(); ++j) {
                     std::cout << neuron_vec[j];
