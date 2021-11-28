@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "Adding some modules"
+module add cmake-3.18.3
 module add gcc-10.2 llvm-11.0.0
 
 echo "#################"
