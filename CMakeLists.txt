@@ -4,11 +4,17 @@ if(${CMAKE_VERSION} VERSION_LESS 3.12)
     cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
 endif()
 
-SET(GCC_COVERAGE_COMPILE_FLAGS "-g")
-
 project(PV021-Project VERSION 1.0
                   DESCRIPTION "Neural Networks Project"
                   LANGUAGES CXX)
+
+# specify release
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+SET(GCC_COVERAGE_COMPILE_FLAGS "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 
