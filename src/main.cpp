@@ -8,16 +8,16 @@
 int main() {
     auto t1 = time(NULL);
 
-    std::string train_data_file = "data/fashion_mnist_train_vectors.csv";
-    std::string train_labels_file = "data/fashion_mnist_train_labels.csv";
-    std::string test_data_file = "data/fashion_mnist_test_vectors.csv";
-    std::string test_labels_file = "data/fashion_mnist_test_labels.csv";
+    const std::string train_data_file = "data/fashion_mnist_train_vectors.csv";
+    const std::string train_labels_file = "data/fashion_mnist_train_labels.csv";
+    const std::string test_data_file = "data/fashion_mnist_test_vectors.csv";
+    const std::string test_labels_file = "data/fashion_mnist_test_labels.csv";
 
-    std::string train_outputs = "data/trainPredictions";
-    std::string test_outputs = "data/actualTestPredictions";
+    const std::string train_outputs = "data/trainPredictions";
+    const std::string test_outputs = "data/actualTestPredictions";
 
-    constexpr int layers_total = 3;
-    constexpr std::array<int, layers_total> topology{784,64,10};
+    constexpr int layers_total = 4;
+    constexpr std::array<int, layers_total> topology{784,128,64,10};
     constexpr double learn_rate = 0.003;
     constexpr int num_epochs = 11;
     constexpr int batch_size = 64;    

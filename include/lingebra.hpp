@@ -221,8 +221,8 @@ public:
     explicit FloatMat(const std::vector<FloatVec> &&rows) : _matrix_rows(std::move(rows)) {}
 
     /* "convert" one vector to matrix - either one-row matrix or one-column matrix */
-    friend FloatMat row_mat_from_vec(const FloatVec &vec);
-    friend FloatMat col_mat_from_vec(const FloatVec &vec);
+    friend FloatMat one_row_mat_from_vec(const FloatVec &vec);
+    friend FloatMat one_col_mat_from_vec(const FloatVec &vec);
 
     int row_num() const
     { return _matrix_rows.size(); }
@@ -397,11 +397,11 @@ public:
 };
 
 /* "convert" one vector to matrix - either one-row matrix or one-column matrix */
-FloatMat row_mat_from_vec(const FloatVec &vec)
+FloatMat one_row_mat_from_vec(const FloatVec &vec)
 {
     return FloatMat(std::vector<FloatVec>{vec});
 }
-FloatMat col_mat_from_vec(const FloatVec &vec)
+FloatMat one_col_mat_from_vec(const FloatVec &vec)
 {
     return FloatMat(std::vector<FloatVec>{vec}).transpose();
 }
