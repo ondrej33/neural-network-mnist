@@ -35,21 +35,20 @@
 *.zip
 *.rar
 
-# data and evaluators
-data/
-java_evaluator/
-python_evaluator/
-
 # random backup (different version) files/dirs
 updated_computations/
 include_new_copy/
 
+# not used java evaluator
+java_evaluator/
+
+# binaries, build, vscode files
 build
-
 .vscode
+main
 
+# cmake / make stuff
 CMakeCache.txt
 CMakeFiles/
 Makefile
 cmake_install.cmake
-main

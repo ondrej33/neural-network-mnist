@@ -1,9 +1,0 @@
-Priorita:
-- najít chybu: model bez hidden vrstev dává 84%, ale s hidden vrstvama se vetšinou jen zhorší (i pod 80)
-    - možná v backpropagaci RELu vrstev?
-- zrychlit - nekopírovat vektory/matice, rezervovat paměť dopředu apod
-
-Detaily:
-- rozdělit trénovací data na train X validate a něco s tím dělat
-- nevim jestli řešit prořezávání / dropout nebo tak, asi nejdříve ne, kdyžtak později
-- inicializace biasů?
