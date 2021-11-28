@@ -1,4 +1,5 @@
 #include <vector>
+#include <array>
 #include <cassert>
 #include <functional>
 #include <random>
@@ -9,12 +10,14 @@
 #include "layer.hpp"
 #include "input_loading.hpp"
 
-/* Main class representing neural network */
+/* Main class representing neural network 
+ * topology = array with numbers of neurons for every layer
+ */
 template<int batch_size, int num_epochs, int layers_total>
 class NeuralNetwork
 {
     /* numbers of neurons for each layer */
-    std::vector<int> _topology;
+    std::array<int, layers_total> _topology;
 
     /* Matrix representing current batch, each row is one input vector */
     FloatMat _input_batch;
@@ -46,7 +49,7 @@ class NeuralNetwork
 
 public:
     /* Creates object from given params/hyperparams, and training data files */
-    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate,  
+    NeuralNetwork(std::array<int, layers_total> layer_sizes, double learn_rate,  
         int steps_learn_decay, double epsilon, double beta1, double beta2,
         std::string train_vectors, std::string train_labels, std::string train_output)
             : _topology(layer_sizes), 
@@ -58,22 +61,22 @@ public:
               _beta1(beta1),
               _beta2(beta2)
     {
-        assert(_topology.size() > 1);
+        assert(layers_total > 1);
         assert(layers_total == _topology.size());
 
         // we dont want to have explicit layer for inputs
         // and we will initiate last layer separately
-        for (int i = 1; i < _topology.size() - 1; ++i) {
+        for (int i = 1; i < layers_total - 1; ++i) {
             _layers.push_back(Layer<batch_size>(_topology[i], _topology[i-1], relu_fn));
         }
         // last layer will have soft_max function
-        _layers.push_back(Layer<batch_size>(_topology[_topology.size() - 1], _topology[_topology.size()-2], soft_fn));
+        _layers.push_back(Layer<batch_size>(_topology[layers_total - 1], _topology[layers_total - 2], soft_fn));
 
         // load the train data
         load_train_data(train_vectors, train_labels, train_output);
     }
 
-    int classes_num() const { return _topology[_topology.size() - 1]; }
+    int classes_num() const { return _topology[layers_total - 1]; }
 
     /* Puts new data and labels instead of old ones */
     void load_train_data(std::string vector_file, std::string label_file, std::string output)

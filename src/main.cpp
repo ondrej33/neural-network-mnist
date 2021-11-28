@@ -1,5 +1,6 @@
 #include <iostream>     // std::cout
 #include <ctime>
+#include <array>
 
 #include "../include/main.hpp"
 #include "../include/neural_network.hpp"
@@ -15,10 +16,10 @@ int main() {
     std::string train_outputs = "data/trainPredictions";
     std::string test_outputs = "data/actualTestPredictions";
 
-    std::vector<int> topology{784,64,10};
     constexpr int layers_total = 3;
-    constexpr double learn_rate = 0.001;
-    constexpr int num_epochs = 20;
+    constexpr std::array<int, layers_total> topology{784,64,10};
+    constexpr double learn_rate = 0.003;
+    constexpr int num_epochs = 11;
     constexpr int batch_size = 64;    
     constexpr int epochs_learn_decay = 2;
     constexpr double epsilon = 1e-7;
@@ -26,6 +27,7 @@ int main() {
     constexpr double beta2 = 0.999;
     NeuralNetwork<batch_size, num_epochs, layers_total> nw(topology, learn_rate, epochs_learn_decay, 
         epsilon, beta1, beta2, train_data_file, train_labels_file, train_outputs);
+
 
     nw.train_network();
     nw.test_network(test_data_file, test_outputs);
