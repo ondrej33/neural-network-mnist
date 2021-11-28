@@ -5,11 +5,9 @@
 
 #include "activation_fns.hpp"
 
-/* forward declaration */
-class NeuralNetwork;
-
 /* Class representing one DENSE layer in the network */
-class Layer
+template<int batch_size>
+struct Layer
 {
     /* Matrix of incoming weights, ith row contains ith weight for >every< neuron 
      * we choose this shape, so that we wont have to transpose every time during forward pass*/
@@ -39,10 +37,7 @@ class Layer
     /* Activation function object (involves both function and derivative) */
     ActivationFunction& _activation_fn;
 
-    friend NeuralNetwork;
-
-public:
-    Layer(int batch_size, int num_neurons, int num_neurons_prev_layer, ActivationFunction& fn)
+    Layer(int num_neurons, int num_neurons_prev_layer, ActivationFunction& fn)
         : _weights_in(num_neurons_prev_layer, num_neurons),
           _biases(num_neurons),
           _inner_potential(batch_size, num_neurons),
@@ -75,7 +70,6 @@ public:
     FloatMat get_weights() const { return _weights_in; }
     FloatVec get_biases() const { return _biases; }
 
-    int batch_size() const { return _output_values.row_num(); }
     int num_neurons() const { return _output_values.col_num(); }
 
     /* Take matrix, where each row is input vector, together batch_size inputs
@@ -100,7 +94,7 @@ public:
         /* Relu deriv would place 0 where inner_potential (relu input) was leq than 0, 
          * then we would mult it with incoming matrix from next layer.
          * We can instead just zero the values from next layer on indices, where inner_potential <= 0 */
-        for (int i = 0; i < batch_size(); ++i) {
+        for (int i = 0; i < batch_size; ++i) {
             for (int j = 0; j < num_neurons(); ++j) {
                 if (_inner_potential[i][j] <= 0) {
                     deriv_inputs_next_layer[i][j] = 0;
@@ -115,7 +109,7 @@ public:
 
         // for bias derivs, we just sum through the samples
         _deriv_biases = FloatVec(num_neurons());
-        for (int i = 0; i < batch_size(); ++i) {
+        for (int i = 0; i < batch_size; ++i) {
             for (int j = 0; j < _biases.size(); ++j) {
                 _deriv_biases[j] += received_vals[i][j];
             }

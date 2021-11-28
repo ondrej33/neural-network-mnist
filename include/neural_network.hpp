@@ -10,6 +10,7 @@
 #include "input_loading.hpp"
 
 /* Main class representing neural network */
+template<int batch_size, int num_epochs, int layers_total>
 class NeuralNetwork
 {
     /* numbers of neurons for each layer */
@@ -22,18 +23,19 @@ class NeuralNetwork
     std::vector<int> _batch_labels;
 
     /* vector of hidden and output layers */
-    std::vector<Layer> _layers;
+    std::vector<Layer<batch_size>> _layers;
 
     /* training vectors and their labels */
     std::vector<VecLabelPair> _train_data;
+    /* training data copy for evaluation (we need not shuffled data to evaluate) */
+    std::vector<VecLabelPair> _train_data_copy;
+
 
     /* output file stream for TRAINING predictions */
     std::ofstream _training_output_file;
 
     /* hyperparameters */
     double _init_learn_rate;
-    int _num_epochs;
-    int _batch_size;
     int _steps_learn_decay;
     double _epsilon;
     double _beta1;
@@ -44,36 +46,32 @@ class NeuralNetwork
 
 public:
     /* Creates object from given params/hyperparams, and training data files */
-    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate, int num_epochs, 
-        int batch_size, int steps_learn_decay, double epsilon, double beta1, double beta2,
+    NeuralNetwork(std::vector<int> layer_sizes, double learn_rate,  
+        int steps_learn_decay, double epsilon, double beta1, double beta2,
         std::string train_vectors, std::string train_labels, std::string train_output)
             : _topology(layer_sizes), 
               _input_batch(batch_size, layer_sizes[0]),
               _batch_labels(batch_size),
               _init_learn_rate(learn_rate),
-              _num_epochs(num_epochs),
-              _batch_size(batch_size),
               _steps_learn_decay(steps_learn_decay),
               _epsilon(epsilon),
               _beta1(beta1),
               _beta2(beta2)
     {
         assert(_topology.size() > 1);
+        assert(layers_total == _topology.size());
 
         // we dont want to have explicit layer for inputs
         // and we will initiate last layer separately
         for (int i = 1; i < _topology.size() - 1; ++i) {
-            _layers.push_back(Layer(_batch_size, _topology[i], _topology[i-1], relu_fn));
+            _layers.push_back(Layer<batch_size>(_topology[i], _topology[i-1], relu_fn));
         }
         // last layer will have soft_max function
-        _layers.push_back(Layer(_batch_size, _topology[_topology.size() - 1], _topology[_topology.size()-2], soft_fn));
+        _layers.push_back(Layer<batch_size>(_topology[_topology.size() - 1], _topology[_topology.size()-2], soft_fn));
 
         // load the train data
         load_train_data(train_vectors, train_labels, train_output);
     }
-
-    /* number of layers excluding input */
-    int layers_num() const { return _layers.size(); }
 
     int classes_num() const { return _topology[_topology.size() - 1]; }
 
@@ -81,6 +79,7 @@ public:
     void load_train_data(std::string vector_file, std::string label_file, std::string output)
     {
         _train_data = std::move(load_vectors_labels(vector_file, label_file, _topology[0]));
+        _train_data_copy = _train_data;
         _training_output_file.open(output);
     }
 
@@ -91,7 +90,7 @@ public:
         _layers[0].forward(_input_batch);
 
         // now all other layers
-        for (int i = 1; i < layers_num(); ++i) {
+        for (int i = 1; i < layers_total - 1; ++i) {
             _layers[i].forward(_layers[i - 1]._output_values);
         }
     }
@@ -102,8 +101,8 @@ public:
         // only care about output neurons with index same as LABEL for given input
         // we can ignore others, they would be 0 in hot-1-coded vectors
         float sum = 0.;
-        for (int i = 0; i < _batch_size; ++i) {
-            float correct_val_from_vector = _layers[layers_num() - 1]._output_values[i][_batch_labels[i]];
+        for (int i = 0; i < batch_size; ++i) {
+            float correct_val_from_vector = _layers[layers_total - 2]._output_values[i][_batch_labels[i]];
             // check if dont have 0, otherwise give some small value (same for 1 for symmetry)
             if (correct_val_from_vector < 1.0e-7) {
                 correct_val_from_vector = 1.0e-7;
@@ -114,7 +113,7 @@ public:
             sum += -std::log(correct_val_from_vector);
         }
         // return the mean
-        return sum / _batch_size;
+        return sum / batch_size;
     }
 
     /* Executes backward pass on the last layer, which is kinda special
@@ -124,38 +123,38 @@ public:
     {
         // lets start by computing derivations of "Softmax AND CrossEntropy" (together) wrt. Softmax inputs
         // thats easy, we just need those outputs and target labels
-        FloatMat softmax_outputs = _layers[layers_num() - 1]._output_values;
+        FloatMat softmax_outputs = _layers[layers_total - 2]._output_values;
         
         // and subtract 1 on indices of true target
-        for (int i = 0; i < _batch_size; ++i) {
+        for (int i = 0; i < batch_size; ++i) {
             softmax_outputs[i][_batch_labels[i]] -= 1; // we receive derivatives wrt. inner potential
         }
 
         // TODO: normalize that computed gradient? - might not be good idea, slows computation?
         /*
-        for (int i = 0; i < _batch_size; ++i) {
-            softmax_outputs[i] /= _batch_size; // we have derivatives wrt. inner pot
+        for (int i = 0; i < batch_size; ++i) {
+            softmax_outputs[i] /= batch_size; // we have derivatives wrt. inner pot
         }
         */
         
         // just an alias for easier understanding
         FloatMat& received_vals = softmax_outputs;
         
-        const FloatMat& outputs_prev_layer = (layers_num() == 1) ? _input_batch : _layers[layers_num() - 2]._output_values;
+        const FloatMat& outputs_prev_layer = (layers_total == 2) ? _input_batch : _layers[layers_total - 3]._output_values;
         // TODO: optimize
-        _layers[layers_num() - 1]._deriv_weights = outputs_prev_layer.transpose() * received_vals;
+        _layers[layers_total - 2]._deriv_weights = outputs_prev_layer.transpose() * received_vals;
 
         // for bias derivs, we just sum through the samples (first annulate values)
-        _layers[layers_num() - 1]._deriv_biases = std::move(FloatVec(_layers[layers_num() - 1]._deriv_biases.size()));
-        for (int i = 0; i < _batch_size; ++i) {
-            for (int j = 0; j < _layers[layers_num() - 1]._biases.size(); ++j) {
-                _layers[layers_num() - 1]._deriv_biases[j] += received_vals[i][j];
+        _layers[layers_total - 2]._deriv_biases = std::move(FloatVec(_layers[layers_total - 2]._deriv_biases.size()));
+        for (int i = 0; i < batch_size; ++i) {
+            for (int j = 0; j < _layers[layers_total - 2]._biases.size(); ++j) {
+                _layers[layers_total - 2]._deriv_biases[j] += received_vals[i][j];
             }
         }
 
         // for derivation wrt. inputs, we multiply received values through the weigths (transponed to make it ok)
         // TODO: optimize
-        _layers[layers_num() - 1]._deriv_inputs = received_vals * _layers[layers_num() - 1]._weights_in.transpose();
+        _layers[layers_total - 2]._deriv_inputs = received_vals * _layers[layers_total - 2]._weights_in.transpose();
     }
 
     
@@ -165,10 +164,10 @@ public:
         // do the output layer separately (both softmax and cross entropy together)
         backward_pass_last_layer();
 
-        if (layers_num() == 1) return;
+        if (layers_total == 2) return;
 
         // now all other hidden layers except first, which is also different
-        for (int i = layers_num() - 2; i > 0; --i) {
+        for (int i = layers_total - 3; i > 0; --i) {
             _layers[i].backward_hidden(_layers[i + 1]._deriv_inputs, _layers[i - 1]._output_values);
         }
         // first hidden layer takes directly inputs
@@ -179,7 +178,7 @@ public:
      * At the moment uses Adam optimizer + somehow learn rate which decays */
     void update_weights_biases(double learn_rate, int iteration)
     {
-        for (int i = 0; i < layers_num(); ++i) {
+        for (int i = 0; i < layers_total - 1; ++i) {
             // first update momentum using computed gradients
             _layers[i]._momentum_weights = _beta1 * _layers[i]._momentum_weights + (1 - _beta1) * _layers[i]._deriv_weights;
             _layers[i]._momentum_biases = _beta1 * _layers[i]._momentum_biases + (1 - _beta1) * _layers[i]._deriv_biases;
@@ -219,9 +218,9 @@ public:
     {
         int num_examples = _train_data.size();
         // we will ignore last few examples in every epoch (it is randomly shuffled, so its probably OK)
-        int batches_total = num_examples / _batch_size;
+        int batches_total = num_examples / batch_size;
              
-        for (int i = 0; i < _num_epochs; i++) {
+        for (int i = 0; i < num_epochs; i++) {
             // update decaying learn rate
             double learn_rate = _init_learn_rate / (1. + static_cast<double>(i) / _steps_learn_decay);
 
@@ -230,22 +229,26 @@ public:
                 std::random_shuffle (_train_data.begin(), _train_data.end());
 
                 // extract the examples for current batch of inputs+labels from training data
-                for (int j = 0; j < _batch_size; ++j) {
-                    VecLabelPair& pair = _train_data[(i * _batch_size + j) % num_examples];
+                for (int j = 0; j < batch_size; ++j) {
+                    VecLabelPair& pair = _train_data[(i * batch_size + j) % num_examples];
                     _input_batch[j] = pair.input_vec / 255; // normalize inputs
                     _batch_labels[j] = pair.label;
                 }
 
                 one_batch(learn_rate, i);
 
-                std::cout << "ep " << i << ", b " << batch_num << " ";
-                print_batch_accuracy();
-                std::cout << "loss: " << calculate_loss_cross_enthropy() << "\n";
+                // TODO: delete this for actual run
+                // for epoch print every 100th batch info
+                if (batch_num % 100 == 0) {
+                    std::cout << "ep " << i << ", b " << batch_num << " ";
+                    print_batch_accuracy();
+                    std::cout << "loss: " << calculate_loss_cross_enthropy() << std::endl;
+                }
             }
          }
 
-        // TODO: evaluate train vectors and get rid of training values (we can move them now)
-        //predict_labels_to_file(_training_output_file, std::move(_train_data));
+        // evaluate train vectors and get rid of training values (we can move them now)
+        predict_labels_to_file(_training_output_file, std::move(_train_data_copy));
     }
 
     /* Checks the network output and returns percentage of correctly labeled samples */
@@ -253,11 +256,11 @@ public:
     {
         int correct = 0;
         // find the output label (largest of the softmax values)
-        for (int sample_num = 0; sample_num < _batch_size; ++sample_num) {
+        for (int sample_num = 0; sample_num < batch_size; ++sample_num) {
             int label = 0;
             float largest = 0.;
             for (int i = 0; i < classes_num(); ++i) {
-                float label_i_prob = _layers[layers_num() - 1]._output_values[sample_num][i];
+                float label_i_prob = _layers[layers_total - 2]._output_values[sample_num][i];
                 if (label_i_prob > largest) {
                     largest = label_i_prob;
                     label = i;
@@ -267,7 +270,7 @@ public:
                 correct++;
             }
         }
-        std::cout << correct << "/" << _batch_size << " ,"; // after this, loss is printed
+        std::cout << correct << "/" << batch_size << " ,"; // after this, loss is printed
     }
 
     /* Does one forward pass, gets the predicted label for given input vector */
@@ -280,16 +283,16 @@ public:
         _layers[0].forward(FloatMat(std::vector<FloatVec>{input_vec}));
 
         // now all other layers
-        for (int i = 1; i < layers_num(); ++i) {
+        for (int i = 1; i < layers_total - 1; ++i) {
             _layers[i].forward(_layers[i - 1]._output_values);
         }
-        assert(_layers[layers_num() - 1]._output_values.row_num() == 1); // only one sample in "batch"
+        assert(_layers[layers_total - 2]._output_values.row_num() == 1); // only one sample in "batch"
 
         // find the output label (largest of the softmax values)
         int label = 0;
         float largest = 0.;
         for (int i = 0; i < classes_num(); ++i) {
-            float label_i_prob = _layers[layers_num() - 1]._output_values[0][i];
+            float label_i_prob = _layers[layers_total - 2]._output_values[0][i];
             if (label_i_prob > largest) {
                 largest = label_i_prob;
                 label = i;
@@ -334,7 +337,7 @@ public:
     void print_weights() const
     {
         std::cout << std::setprecision(4) << std::fixed;
-        for (int i = layers_num() - 1; i >= 0; --i) {
+        for (int i = layers_total - 2; i >= 0; --i) {
             for (int j = 0; j < _layers[i]._weights_in.col_num(); ++j) {
                 std::cout << "[ ";
                 for (int k = 0; k < _layers[i]._weights_in.row_num(); ++k) {
@@ -354,7 +357,7 @@ public:
     void print_neurons()
     {
         std::cout << std::setprecision(4) << std::fixed;
-        for (int i = layers_num() - 1; i >= 0; --i) {
+        for (int i = layers_total - 2; i >= 0; --i) {
             for (const auto& neuron_vec: _layers[i].get_outputs()) {
                 std::cout << "[";
                 for (int j = 0; j < neuron_vec.size(); ++j) {
