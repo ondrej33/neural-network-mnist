@@ -9,7 +9,7 @@ echo "    COMPILING    "
 echo "#################"
 # g++ -std=c++17 -O3 src/main.cpp include/main.hpp include/lingebra.hpp include/neural_network.hpp include/activation_fns.hpp include/layer.hpp include/input_loading.hpp main
 
-rm CMakeCache.txt
+rm CMakeCache.txt Makefile main data/actualTestPredictions data/trainPredictions
 cmake .
 make
 
