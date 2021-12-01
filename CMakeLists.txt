@@ -10,7 +10,7 @@ project(PV021-Project VERSION 1.0
 
 set(CMAKE_CXX_STANDARD 17)
 
-# multiprocessing, for now uncommented
+# multiprocessing, for now commented, because its not used in current version
 #find_package(OpenMP)
 #if (OPENMP_FOUND)
 #    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -25,7 +25,7 @@ endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-# set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Werror -Wextra -Wpedantic -Wconversion")
+#set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Werror -Wextra -Wpedantic -Wconversion")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
