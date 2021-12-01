@@ -24,7 +24,7 @@ public:
     explicit FloatVec(std::vector<float> &&v): _vec(std::move(v)) {}
 
     /* std::vector operations */
-    int size() const { return _vec.size(); }
+    int size() const { return static_cast<int>(_vec.size()); }
     bool empty() const { return _vec.empty(); }
     void push_back(float num) { _vec.push_back(num); }
     void pop_back() { _vec.pop_back(); }
@@ -209,7 +209,7 @@ public:
     friend FloatMat one_col_mat_from_vec(const FloatVec &vec);
 
     int row_num() const
-    { return _matrix_rows.size(); }
+    { return static_cast<int>(_matrix_rows.size()); }
 
     int col_num() const
     { return (row_num() == 0) ? 0 : _matrix_rows[0].size(); }

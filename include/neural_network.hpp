@@ -107,11 +107,11 @@ public:
         for (int i = 0; i < batch_size; ++i) {
             float correct_val_from_vector = _layers[layers_total - 2]._output_values[i][_batch_labels[i]];
             // check if dont have 0, otherwise give some small value (same for 1 for symmetry)
-            if (correct_val_from_vector < 1.0e-7) {
-                correct_val_from_vector = 1.0e-7;
+            if (correct_val_from_vector < 1.0e-6) {
+                correct_val_from_vector = 1.0e-6;
             }
-            else if (correct_val_from_vector > 0.9999999) {
-                correct_val_from_vector = 0.9999999;
+            else if (correct_val_from_vector > 0.999999) {
+                correct_val_from_vector = 0.999999;
             }
             sum += -std::log(correct_val_from_vector);
         }
@@ -219,7 +219,7 @@ public:
      * for every epoch always iterates through examples using batches */
     void train_network(std::default_random_engine& generator)
     {
-        int num_examples = _train_data.size();
+        int num_examples = static_cast<int>(_train_data.size());
         // we will ignore last few examples in every epoch (it is randomly shuffled, so its probably OK)
         int batches_total = num_examples / batch_size;
              
