@@ -16,7 +16,7 @@ std::vector<FloatVec> get_inputs(std::string file_name, int nums_per_line) {
     {
         std::stringstream line_stream(line);
         FloatVec vec;
-        vec.reserve(784);  // reserve memory
+        vec.reserve(nums_per_line);  // reserve memory for one input vector
 
         // input vectors look just like "8,0,220,44,...,26,2"
         for (float num; line_stream >> num;) {
@@ -68,7 +68,7 @@ std::vector<VecLabelPair> load_vectors_labels(
     while (std::getline(vector_stream, line))
     {
         VecLabelPair vec_label_pair;
-        vec_label_pair.input_vec.reserve(784);  // reserve some memory for one line
+        vec_label_pair.input_vec.reserve(nums_per_vector);  // reserve some memory for one line
 
         label_stream >> vec_label_pair.label;
         if (label_stream.peek() == '\n') {
