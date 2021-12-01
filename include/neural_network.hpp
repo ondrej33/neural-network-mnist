@@ -308,7 +308,7 @@ public:
     void predict_labels_to_file(std::ofstream& file, 
         std::vector<FloatVec> input_vectors)
     {
-        for (int i = 0; i < input_vectors.size(); ++i) {
+        for (size_t i = 0; i < input_vectors.size(); ++i) {
             FloatVec& input_vec = input_vectors[i];
             int label = predict_one_label(input_vec);
             file << label << "\n";
@@ -320,7 +320,7 @@ public:
     void predict_labels_to_file(std::ofstream& file, 
         std::vector<VecLabelPair> input_data)
     {
-        for (int i = 0; i < input_data.size(); ++i) {
+        for (size_t i = 0; i < input_data.size(); ++i) {
             auto& vec = input_data[i].input_vec;
             int label = predict_one_label(vec);
             file << label << "\n";

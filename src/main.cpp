@@ -2,7 +2,6 @@
 #include <ctime>
 #include <array>
 
-#include "../include/main.hpp"
 #include "../include/neural_network.hpp"
 
 int main() {
