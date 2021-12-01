@@ -37,7 +37,7 @@ struct Layer
     /* Activation function object (involves both function and derivative) */
     ActivationFunction& _activation_fn;
 
-    Layer(int num_neurons, int num_neurons_prev_layer, ActivationFunction& fn)
+    Layer(int num_neurons, int num_neurons_prev_layer, ActivationFunction& fn, std::default_random_engine &generator)
         : _weights_in(num_neurons_prev_layer, num_neurons),
           _biases(num_neurons),
           _inner_potential(batch_size, num_neurons),
@@ -51,12 +51,10 @@ struct Layer
           _cached_biases(num_neurons),
           _activation_fn(fn)
     {
-        // TODO: initialize biases? - zero init is often ok
+        // TODO: initialize biases? - zero init should be ok
         
         // initiate weights - we use some kind of Xavier initialization for now
-        // TODO: different seed for every layer?
-        std::default_random_engine generator;
-        std::normal_distribution<float> distribution(0.0, 1.0 / num_neurons);  // values have to be 0.0 and 1.0
+        std::normal_distribution<float> distribution(0.0, 1.0 / num_neurons);  // values have to be 0.0 and 1.0 (not 0 and 1)
 
         for (int i = 0; i < _weights_in.row_num(); ++i) {
             for (int j = 0; j < _weights_in.col_num(); ++j) {
@@ -80,7 +78,6 @@ struct Layer
         _inner_potential = (input_batch * _weights_in).add_vec_to_all_rows(_biases);
 
         // now compute output values 
-        // TODO - do we need to keep 2 separate vectors for inner potential and outputs ?
         _output_values = _inner_potential;
         _activation_fn.apply_activation(_output_values);
     }

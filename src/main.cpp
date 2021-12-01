@@ -16,6 +16,8 @@ int main() {
     const std::string train_outputs = "data/trainPredictions";
     const std::string test_outputs = "data/actualTestPredictions";
 
+    auto generator = std::default_random_engine(42);  // Answer to the Ultimate Question of Life, the Universe, and Everything
+
     constexpr int layers_total = 4;
     constexpr std::array<int, layers_total> topology{784,128,64,10};
     constexpr double learn_rate = 0.003;
@@ -26,10 +28,10 @@ int main() {
     constexpr double beta1 = 0.9;
     constexpr double beta2 = 0.999;
     NeuralNetwork<batch_size, num_epochs, layers_total> nw(topology, learn_rate, epochs_learn_decay, 
-        epsilon, beta1, beta2, train_data_file, train_labels_file, train_outputs);
+        epsilon, beta1, beta2, train_data_file, train_labels_file, train_outputs, generator);
 
 
-    nw.train_network();
+    nw.train_network(generator);
     nw.test_network(test_data_file, test_outputs);
 
     std::cout << "Time: " << time(NULL) - t1 << "\n";

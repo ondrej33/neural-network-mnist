@@ -33,7 +33,6 @@ class NeuralNetwork
     /* training data copy for evaluation (we need not shuffled data to evaluate) */
     std::vector<VecLabelPair> _train_data_copy;
 
-
     /* output file stream for TRAINING predictions */
     std::ofstream _training_output_file;
 
@@ -51,7 +50,8 @@ public:
     /* Creates object from given params/hyperparams, and training data files */
     NeuralNetwork(std::array<int, layers_total> layer_sizes, double learn_rate,  
         int steps_learn_decay, double epsilon, double beta1, double beta2,
-        std::string train_vectors, std::string train_labels, std::string train_output)
+        std::string train_vectors, std::string train_labels, std::string train_output,
+        std::default_random_engine& generator)
             : _topology(layer_sizes), 
               _input_batch(batch_size, layer_sizes[0]),
               _batch_labels(batch_size),
@@ -67,10 +67,10 @@ public:
         // we dont want to have explicit layer for inputs
         // and we will initiate last layer separately
         for (int i = 1; i < layers_total - 1; ++i) {
-            _layers.push_back(Layer<batch_size>(_topology[i], _topology[i-1], relu_fn));
+            _layers.push_back(Layer<batch_size>(_topology[i], _topology[i-1], relu_fn, generator));
         }
         // last layer will have soft_max function
-        _layers.push_back(Layer<batch_size>(_topology[layers_total - 1], _topology[layers_total - 2], soft_fn));
+        _layers.push_back(Layer<batch_size>(_topology[layers_total - 1], _topology[layers_total - 2], soft_fn, generator));
 
         // load the train data
         load_train_data(train_vectors, train_labels, train_output);
@@ -217,7 +217,7 @@ public:
     /* Whole training process
      * Shuffles data, iterates for few epochs
      * for every epoch always iterates through examples using batches */
-    void train_network()
+    void train_network(std::default_random_engine& generator)
     {
         int num_examples = _train_data.size();
         // we will ignore last few examples in every epoch (it is randomly shuffled, so its probably OK)
@@ -229,7 +229,7 @@ public:
 
             for (int batch_num = 0; batch_num < batches_total; ++batch_num) {
                 // Randomly shuffle (both vectors+labels) and then take batches sequentially
-                std::random_shuffle (_train_data.begin(), _train_data.end());
+                std::shuffle (_train_data.begin(), _train_data.end(), generator);
 
                 // extract the examples for current batch of inputs+labels from training data
                 for (int j = 0; j < batch_size; ++j) {
