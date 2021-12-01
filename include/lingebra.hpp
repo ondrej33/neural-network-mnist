@@ -27,14 +27,14 @@ public:
     int size() const { return _vec.size(); }
     bool empty() const { return _vec.empty(); }
     void push_back(float num) { _vec.push_back(num); }
-    void pop_back(float num) { _vec.pop_back(); }
+    void pop_back() { _vec.pop_back(); }
     void reserve(int n) { _vec.reserve(n); }
 
     /* Arithmetic operators that modify sthe object */
 
     FloatVec& operator+=(const FloatVec& other)
     {
-        this->compareSizes(other);
+        assert(this->size() == other.size());
         for (int i = 0; i < size(); ++i) {
             _vec[i] += other._vec[i];
         }
@@ -43,7 +43,7 @@ public:
 
     FloatVec& operator-=(const FloatVec& other)
     {
-        this->compareSizes(other);
+        assert(this->size() == other.size());
         for (int i = 0; i < size(); ++i) {
             _vec[i] -= other._vec[i];
         }
@@ -109,14 +109,12 @@ public:
 
     std::vector<float>::const_iterator begin() const { return _vec.begin(); }
     std::vector<float>::const_iterator end() const { return _vec.end(); }
-
-    void compareSizes(const FloatVec& other) const;
 };
 
 /* unary minus */
 FloatVec operator-(FloatVec vec)
 {   
-    for (int i = 0; i < vec._vec.size(); ++i) {
+    for (size_t i = 0; i < vec._vec.size(); ++i) {
         vec[i] *= -1;
     }
     return vec;
@@ -132,7 +130,7 @@ FloatVec operator-(FloatVec first, const FloatVec& second)
 /* dot product */
 float operator*(const FloatVec& first, const FloatVec& second)
 {
-    first.compareSizes(second);
+    assert(first.size() == second.size());
     float result = 0;
     for (int i = 0; i < first.size(); ++i) {
         result += first[i] * second[i];
@@ -188,20 +186,6 @@ FloatVec divide_by_items(FloatVec first, const FloatVec& second)
         first[i] /= second[i];
     }
     return first;
-}
-
-/**
- * @brief Check if the another vector is of the same length as ours
- *      Can be removed during production, just make this function empty and
- *      compiler will do the rest (Preferably by DEBUG macro )
- * @param other 
- */
-void FloatVec::compareSizes(const FloatVec& other) const {  
-    #ifdef DEBUG
-    if (size() != other.size()) {
-        throw std::length_error("Vectors have different length");
-    }    
-    #endif
 }
 
 
