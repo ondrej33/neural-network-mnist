@@ -13,14 +13,14 @@ public:
     ActivationFunction() = default; 
    
     /* Applies activation fn on every sample vector in batch */
-    virtual void apply_activation(FloatMat& batch_mat) { }
+    virtual void apply_activation(FloatMat& ) { }
     /* Applies derivation fn on every sample vector in batch */
-    virtual void apply_derivation(FloatMat& batch_mat) { }
+    virtual void apply_derivation(FloatMat& ) { }
 
     /* Applies activation fn on every item in input vector */
-    virtual void apply_activation(FloatVec& vec) { }
+    virtual void apply_activation(FloatVec& ) { }
     /* Applies derivation fn on every item in input vector */
-    virtual void apply_derivation(FloatVec& vec) { }
+    virtual void apply_derivation(FloatVec& ) { }
 
 
     virtual ~ActivationFunction() = default;
