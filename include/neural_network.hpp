@@ -46,6 +46,7 @@ class NeuralNetwork
     double _beta1;
     double _beta2;
 
+    /* Activation function objects */
     ReluFunction relu_fn = ReluFunction();
     SoftmaxFunction soft_fn = SoftmaxFunction();
 
@@ -136,7 +137,7 @@ public:
             softmax_outputs[i][_batch_labels[i]] -= 1; // we receive derivatives wrt. inner potential
         }
 
-        // TODO: normalize that computed gradient? - might not be good idea, slows computation?
+        // normalizing computed gradient? - probably NOT good idea, slows computation?
         /*
         for (int i = 0; i < batch_size; ++i) {
             softmax_outputs[i] /= batch_size; // we have derivatives wrt. inner pot
@@ -257,6 +258,7 @@ public:
          }
 
         // evaluate train vectors and get rid of training values (we can move them now)
+        std::cout << "Training finished. Writing all training predictions now." << std::endl;
         predict_labels_to_file(_training_output_file, std::move(_train_data_copy));
     }
 

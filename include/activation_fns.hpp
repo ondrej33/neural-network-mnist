@@ -104,7 +104,7 @@ public:
 
     /**
      * We will NOT specify "apply_derivation" function
-     * Softmax derivation will be computed together with CrossEnropy derivation
+     * The softmax derivation will be computed together with CrossEnropy derivation
      * And the network class will handle this
      */
 };

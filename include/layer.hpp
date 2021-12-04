@@ -1,7 +1,6 @@
 #ifndef LAYER_H
 #define LAYER_H
 
-
 #include <vector>
 #include <cassert>
 #include <functional>
@@ -24,7 +23,6 @@ struct Layer
     FloatMat _inner_potential;
 
     /* Matrix where each row contains >output value of each neuron, for one input vector of the batch< */
-    // TODO: do we need to store this for RELU layers? - it is easily computable
     FloatMat _output_values;
 
     /* Gradient wrt. weights, biases, inputs */
@@ -55,7 +53,7 @@ struct Layer
           _cached_biases(num_neurons),
           _activation_fn(fn)
     {
-        // TODO: initialize biases? - zero init should be ok
+        // TODO: initialize biases? - zero initialization should be ok
         
         // initiate weights - we use some kind of Xavier initialization for now
         std::normal_distribution<float> distribution(0.0, 1.0 / num_neurons);  // values have to be 0.0 and 1.0 (not 0 and 1)

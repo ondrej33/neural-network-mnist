@@ -1,6 +1,7 @@
 #include <iostream>     // std::cout
-#include <ctime>
-#include <array>
+#include <ctime>        // time
+#include <array>        // std::array
+#include <random>       // std::default_random_engine
 
 #include "../include/neural_network.hpp"
 
@@ -31,6 +32,7 @@ int main() {
 
 
     nw.train_network(generator);
+    std::cout << "Writing testing predictions now." << std::endl;
     nw.test_network(test_data_file, test_outputs);
 
     std::cout << "Time: " << time(NULL) - t1 << "\n";
