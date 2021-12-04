@@ -1,3 +1,6 @@
+#ifndef ACTIVATION_FNS_H
+#define ACTIVATION_FNS_H
+
 #include <algorithm>    // std::max
 #include <math.h>       // log, exp
 #include <iostream>
@@ -105,3 +108,5 @@ public:
      * And the network class will handle this
      */
 };
+
+#endif //ACTIVATION_FNS_H

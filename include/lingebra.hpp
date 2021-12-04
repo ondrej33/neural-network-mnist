@@ -1,3 +1,6 @@
+#ifndef LINGEBRA_H
+#define LINGEBRA_H
+
 #include <vector>
 #include <utility>
 #include <cassert>
@@ -535,3 +538,5 @@ inline void print_matrix(const FloatMat &m)
         std::cout << "\n";
     }
 }
+
+#endif //LINGEBRA_H

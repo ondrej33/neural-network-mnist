@@ -1,3 +1,7 @@
+#ifndef LAYER_H
+#define LAYER_H
+
+
 #include <vector>
 #include <cassert>
 #include <functional>
@@ -117,3 +121,5 @@ struct Layer
         _deriv_inputs = received_vals * _weights_in.transpose();
     }
 };
+
+#endif //LAYER_H

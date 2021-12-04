@@ -1,3 +1,6 @@
+#ifndef NEURAL_NETWORK_H
+#define NEURAL_NETWORK_H
+
 #include <vector>
 #include <array>
 #include <cassert>
@@ -240,14 +243,17 @@ public:
 
                 one_batch(learn_rate, i);
 
-                // TODO: delete this for actual run
+                // Uncomment if needed progress printing 
+                /*
                 // for epoch print every 100th batch info
                 if (batch_num % 100 == 0) {
                     std::cout << "ep " << i << ", b " << batch_num << " ";
                     print_batch_accuracy();
                     std::cout << "loss: " << calculate_loss_cross_enthropy() << std::endl;
                 }
+                */
             }
+            std::cout << "epoch " << i << " finished" << std::endl;
          }
 
         // evaluate train vectors and get rid of training values (we can move them now)
@@ -380,3 +386,6 @@ public:
         if (_training_output_file.is_open()) { _training_output_file.close(); }
     }
 };
+
+
+#endif //NEURAL_NETWORK_H

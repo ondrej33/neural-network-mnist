@@ -1,3 +1,6 @@
+#ifndef INPUT_LOADING_H
+#define INPUT_LOADING_H
+
 #include <memory>       // std::unique_ptr
 #include <fstream>      // std::ifstream
 #include <sstream>      // std::stringstream
@@ -88,3 +91,5 @@ std::vector<VecLabelPair> load_vectors_labels(
     }
     return result;
 }
+
+#endif //INPUT_LOADING_H
