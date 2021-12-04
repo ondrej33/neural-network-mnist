@@ -149,7 +149,7 @@ public:
         
         const FloatMat& outputs_prev_layer = (layers_total == 2) ? _input_batch : _layers[layers_total - 3]._output_values;
         // TODO: optimize
-        _layers[layers_total - 2]._deriv_weights = outputs_prev_layer.transpose() * received_vals;
+        _layers[layers_total - 2]._deriv_weights = std::move(outputs_prev_layer.transpose() * received_vals);
 
         // for bias derivs, we just sum through the samples (first annulate values)
         _layers[layers_total - 2]._deriv_biases = std::move(FloatVec(_layers[layers_total - 2]._deriv_biases.size()));
@@ -161,7 +161,7 @@ public:
 
         // for derivation wrt. inputs, we multiply received values through the weigths (transponed to make it ok)
         // TODO: optimize
-        _layers[layers_total - 2]._deriv_inputs = received_vals * _layers[layers_total - 2]._weights_in.transpose();
+        _layers[layers_total - 2]._deriv_inputs = std::move(received_vals * _layers[layers_total - 2]._weights_in.transpose());
     }
 
     
@@ -187,22 +187,22 @@ public:
     {
         for (int i = 0; i < layers_total - 1; ++i) {
             // first update momentum using computed gradients
-            _layers[i]._momentum_weights = _beta1 * _layers[i]._momentum_weights + (1 - _beta1) * _layers[i]._deriv_weights;
-            _layers[i]._momentum_biases = _beta1 * _layers[i]._momentum_biases + (1 - _beta1) * _layers[i]._deriv_biases;
+            _layers[i]._momentum_weights = std::move(_beta1 * _layers[i]._momentum_weights + (1 - _beta1) * _layers[i]._deriv_weights);
+            _layers[i]._momentum_biases = std::move(_beta1 * _layers[i]._momentum_biases + (1 - _beta1) * _layers[i]._deriv_biases);
 
             // compute corrected momentum (without this, it would be biased in early iterations)
             float correction = 1. - std::pow(_beta1, iteration + 1);
-            auto better_momentum_weights = _layers[i]._momentum_weights / correction;
-            auto better_momentum_biases = _layers[i]._momentum_biases / correction;
+            auto better_momentum_weights = std::move(_layers[i]._momentum_weights / correction);
+            auto better_momentum_biases = std::move(_layers[i]._momentum_biases / correction);
 
             // also update cache with squared gradients
-            _layers[i]._cached_weights = _beta2 * _layers[i]._cached_weights + (1 - _beta2) * square_inside(_layers[i]._deriv_weights);
-            _layers[i]._cached_biases = _beta2 * _layers[i]._cached_biases + (1 - _beta2) * square_inside(_layers[i]._deriv_biases);
+            _layers[i]._cached_weights = std::move(_beta2 * _layers[i]._cached_weights + (1 - _beta2) * square_inside(_layers[i]._deriv_weights));
+            _layers[i]._cached_biases = std::move(_beta2 * _layers[i]._cached_biases + (1 - _beta2) * square_inside(_layers[i]._deriv_biases));
 
             // again compute corrected cache (without this, it would be biased in early iterations)
             float correction2 = 1. - std::pow(_beta2, iteration + 1);
-            auto better_cached_weights = _layers[i]._cached_weights / correction2;
-            auto better_cached_biases = _layers[i]._cached_biases / correction2;
+            auto better_cached_weights = std::move(_layers[i]._cached_weights / correction2);
+            auto better_cached_biases = std::move(_layers[i]._cached_biases / correction2);
 
             // finally update the parameters
             _layers[i]._weights_in += divide_by_items((-learn_rate * better_momentum_weights), (add_scalar_to_all_items(sqrt_inside(better_cached_weights), _epsilon)));

@@ -77,7 +77,7 @@ struct Layer
     void forward(const FloatMat& input_batch)
     {
         // first compute inner potential
-        _inner_potential = (input_batch * _weights_in).add_vec_to_all_rows(_biases);
+        _inner_potential = std::move((input_batch * _weights_in).add_vec_to_all_rows(_biases));
 
         // now compute output values 
         _output_values = _inner_potential;
@@ -104,7 +104,7 @@ struct Layer
         FloatMat& received_vals = deriv_inputs_next_layer;
         
         // TODO: optimize
-        _deriv_weights = outputs_prev_layer.transpose() * received_vals;
+        _deriv_weights = std::move(outputs_prev_layer.transpose() * received_vals);
 
         // for bias derivs, we just sum through the samples
         _deriv_biases = FloatVec(num_neurons());
@@ -116,7 +116,7 @@ struct Layer
 
         // for derivation wrt. inputs, we multiply received values through the weigths (transponed to make it ok)
         // TODO: optimize
-        _deriv_inputs = received_vals * _weights_in.transpose();
+        _deriv_inputs = std::move(received_vals * _weights_in.transpose());
     }
 };
 
