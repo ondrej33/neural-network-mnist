@@ -13,8 +13,8 @@ int main() {
     const std::string test_data_file = "data/fashion_mnist_test_vectors.csv";
     const std::string test_labels_file = "data/fashion_mnist_test_labels.csv";
 
-    const std::string train_outputs = "data/trainPredictions";
-    const std::string test_outputs = "data/actualTestPredictions";
+    const std::string train_outputs = "trainPredictions";
+    const std::string test_outputs = "actualTestPredictions";
 
     auto generator = std::default_random_engine(42);  // Answer to the Ultimate Question of Life, the Universe, and Everything
 
