@@ -37,7 +37,7 @@
 
 # random backup (different version) files/dirs
 updated_computations/
-include_new_copy/
+parallel/
 
 # not used java evaluator
 java_evaluator/
