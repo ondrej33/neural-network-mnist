@@ -1,5 +1,4 @@
 # Python evaluation utility
-Similar utility will be used to evaluate your solution.
 
 ```python
 python3 evaluate.py -h
