@@ -1,3 +1,8 @@
+"""
+Simple script for parsing MNIST dataset from the 'https://www.kaggle.com/c/digit-recognizer/data'
+It outputs the example vectors into one file and the labels into the another
+"""
+
 train_path = "data/mnist_train.csv"
 test_path = "data/mnist_test.csv"
 
