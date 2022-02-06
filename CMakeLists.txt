@@ -18,15 +18,15 @@ set(CMAKE_CXX_STANDARD 17)
 #    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 #endif()
 
-# specify always release (if you want debug, then comment this)
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
+# specify the mode (if you want the other one, then comment this)
+set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Debug)
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 #set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Werror -Wextra -Wpedantic -Wconversion")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
+
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_executable(main src/main.cpp include/lingebra.hpp include/neural_network.hpp include/activation_fns.hpp include/layer.hpp include/input_loading.hpp
