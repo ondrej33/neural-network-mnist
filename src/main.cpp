@@ -30,7 +30,6 @@ int main() {
     NeuralNetwork<batch_size, num_epochs, layers_total> nw(topology, learn_rate, epochs_learn_decay, 
         epsilon, beta1, beta2, train_data_file, train_labels_file, train_outputs, generator);
 
-
     nw.train_network(generator);
     std::cout << "Writing testing predictions now." << std::endl;
     nw.test_network(test_data_file, test_outputs);

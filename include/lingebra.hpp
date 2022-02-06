@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <iostream>
 
-
 /**
  * Vector of floats with all necessary operators defined 
  */
@@ -323,58 +322,6 @@ public:
         return transp;
     }
 
-    /* Computes dot product of row of first matrix and col of second matrix */
-    friend float dot_row_col(const FloatMat& first, const FloatMat& second, int row, int col);
-
-    /* Multiplies two matrices, the result is saved inside this matrix 
-       Does not waste time or space */
-    FloatMat& save_multiplication(const FloatMat& first, const FloatMat& second)
-    {
-        assert(first.col_num() == second.row_num());
-        assert(first.row_num() == this->row_num() && second.col_num() == this->col_num());
-        for (int i = 0; i < first.row_num(); ++i) {
-            for (int j = 0; j < second.col_num(); ++j) {
-                (*this)[i][j] = dot_row_col(first, second, i, j);
-            }
-        }
-    }
-
-    /* Multiplies TRANSPONED first matrix with second, the result is saved inside this matrix 
-       Does not waste time or space */
-    FloatMat& save_multiplication_transponse_first(const FloatMat& first, const FloatMat& second)
-    {
-        assert(first.row_num() == second.row_num());
-        assert(first.col_num() == this->row_num() && second.col_num() == this->col_num());
-        for (int i = 0; i < first.col_num(); ++i) {
-            for (int j = 0; j < second.col_num(); ++j) {
-                float res = 0.;
-                for (int k = 0; k < first.row_num(); ++k) {
-                    res += first[k][i] * second[k][j];
-                }
-                (*this)[i][j] = res;
-            }
-        }
-        return *this;
-    }
-
-    /* Multiplies first matrix with TRANSPONED second, the result is saved inside this matrix 
-       Does not waste time or space */
-    FloatMat& save_multiplication_transponse_second(const FloatMat& first, const FloatMat& second)
-    {
-        assert(first.col_num() == second.col_num());
-        assert(first.row_num() == this->row_num() && second.row_num() == this->col_num());
-        for (int i = 0; i < first.row_num(); ++i) {
-            for (int j = 0; j < second.row_num(); ++j) {
-                float res = 0.;
-                for (int k = 0; k < first.col_num(); ++k) {
-                    res += first[i][k] * second[j][k];
-                }
-                (*this)[i][j] = res;
-            }
-        }
-        return *this;
-    }
-
     /* iterators */
     std::vector<FloatVec>::iterator begin() { return _matrix_rows.begin(); }
     std::vector<FloatVec>::iterator end() { return _matrix_rows.end(); }
@@ -382,49 +329,6 @@ public:
     std::vector<FloatVec>::const_iterator begin() const { return _matrix_rows.begin(); }
     std::vector<FloatVec>::const_iterator end() const { return _matrix_rows.end(); }
 };
-
-/* "convert" one vector to matrix - either one-row matrix or one-column matrix */
-FloatMat one_row_mat_from_vec(const FloatVec &vec)
-{
-    return FloatMat(std::vector<FloatVec>{vec});
-}
-FloatMat one_col_mat_from_vec(const FloatVec &vec)
-{
-    return FloatMat(std::vector<FloatVec>{vec}).transpose();
-}
-
-/* Computes dot product of row of first matrix and col of second matrix */
-float dot_row_col(const FloatMat& first, const FloatMat& second, int row, int col)
-{
-    assert(first.col_num() == second.row_num());
-    float res = 0.;
-    for (int i = 0; i < first.col_num(); ++i) {
-        res += first[row][i] * second[i][col];
-    }
-    return res;
-}
-
-/* Computes dot product of row of matrix and vector */
-float dot_row_vec(const FloatMat& mat, const FloatVec& vec, int row)
-{
-    assert(mat.col_num() == vec.size());
-    float res = 0.;
-    for (int i = 0; i < mat.col_num(); ++i) {
-        res += mat[row][i] * vec[i];
-    }
-    return res;
-}
-
-/* Computes dot product of vector and col of matrix */
-float dot_vec_col(const FloatVec& vec, const FloatMat& mat, int col)
-{
-    assert(vec.size() == mat.row_num());
-    float res = 0.;
-    for (int i = 0; i < vec.size(); ++i) {
-        res += vec[i] * mat[i][col];
-    }
-    return res;
-}
 
 /* matrix addition and subtraction */
 FloatMat operator+(FloatMat x, const FloatMat &y)

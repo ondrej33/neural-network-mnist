@@ -25,7 +25,6 @@ public:
     /* Applies derivation fn on every item in input vector */
     virtual void apply_derivation(FloatVec& ) { }
 
-
     virtual ~ActivationFunction() = default;
 };
 
@@ -100,7 +99,6 @@ public:
             vec[i] = vec[i] / sum;
         }
     }
-
 
     /**
      * We will NOT specify "apply_derivation" function

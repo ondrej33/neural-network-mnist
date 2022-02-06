@@ -8,7 +8,7 @@
 #include <random>
 #include <memory>
 #include <fstream>
-#include <math.h>       // log, exp
+#include <math.h>      
 
 #include "layer.hpp"
 #include "input_loading.hpp"
@@ -77,18 +77,12 @@ public:
         _layers.push_back(Layer<batch_size>(_topology[layers_total - 1], _topology[layers_total - 2], soft_fn, generator));
 
         // load the train data
-        load_train_data(train_vectors, train_labels, train_output);
-    }
-
-    int classes_num() const { return _topology[layers_total - 1]; }
-
-    /* Puts new data and labels instead of old ones */
-    void load_train_data(std::string vector_file, std::string label_file, std::string output)
-    {
         _train_data = std::move(load_vectors_labels(vector_file, label_file, _topology[0]));
         _train_data_copy = _train_data;
         _training_output_file.open(output);
     }
+
+    int classes_num() const { return _topology[layers_total - 1]; }
 
     /* Evaluate all neuron layers bottom-up (from input layer to output) */
     void forward_pass()
@@ -119,13 +113,12 @@ public:
             }
             sum += -std::log(correct_val_from_vector);
         }
-        // return the mean
-        return sum / batch_size;
+        return sum / batch_size; // return the mean
     }
 
-    /* Executes backward pass on the last layer, which is kinda special
-     * It involves both softmax and loss 
-     * TODO - combine this with layer.backward_hidden - partly similar functionality*/
+    /* Executes backward pass on the last layer, which is kinda special, because
+     * it combines both softmax and loss function
+     * TODO - combine this with layer.backward_hidden - partly similar functionality */
     void backward_pass_last_layer()
     {
         // lets start by computing derivations of "Softmax AND CrossEntropy" (together) wrt. Softmax inputs
@@ -137,15 +130,7 @@ public:
             softmax_outputs[i][_batch_labels[i]] -= 1; // we receive derivatives wrt. inner potential
         }
 
-        // normalizing computed gradient? - probably NOT good idea, slows computation?
-        /*
-        for (int i = 0; i < batch_size; ++i) {
-            softmax_outputs[i] /= batch_size; // we have derivatives wrt. inner pot
-        }
-        */
-        
-        // just an alias for easier understanding
-        FloatMat& received_vals = softmax_outputs;
+        FloatMat& received_vals = softmax_outputs; // just an alias for easier understanding
         
         const FloatMat& outputs_prev_layer = (layers_total == 2) ? _input_batch : _layers[layers_total - 3]._output_values;
         // TODO: optimize
@@ -164,7 +149,6 @@ public:
         _layers[layers_total - 2]._deriv_inputs = std::move(received_vals * _layers[layers_total - 2]._weights_in.transpose());
     }
 
-    
     /* Using backpropagation, compute gradients wrt. inputs, weights and biases */
     void backward_pass()
     {
@@ -244,15 +228,12 @@ public:
 
                 one_batch(learn_rate, i);
 
-                // Uncomment if needed progress printing 
-                /*
-                // for epoch print every 100th batch info
+                // progress printing - for epoch print every 100th batch info
                 if (batch_num % 100 == 0) {
-                    std::cout << "ep " << i << ", b " << batch_num << " ";
+                    std::cout << "epoch " << i << ", batch " << batch_num << ", ";
                     print_batch_accuracy();
                     std::cout << "loss: " << calculate_loss_cross_enthropy() << std::endl;
                 }
-                */
             }
             std::cout << "epoch " << i << " finished" << std::endl;
          }
@@ -281,14 +262,13 @@ public:
                 correct++;
             }
         }
-        std::cout << correct << "/" << batch_size << " ,"; // after this, loss is printed
+        std::cout << correct << "/" << batch_size << ", "; // after this, loss is printed
     }
 
     /* Does one forward pass, gets the predicted label for given input vector */
     int predict_one_label(FloatVec input_vec)
     {
-        // normalize inputs
-        input_vec /= 255.;
+        input_vec /= 255.; // normalize inputs
 
         // initial layer is input, so lets use it to initiate first
         _layers[0].forward(FloatMat(std::vector<FloatVec>{input_vec}));
@@ -343,51 +323,9 @@ public:
         predict_labels_to_file(output_file, std::move(test_vectors));
     }
 
-    /* Prints values of all weights, one layer a line
-     * output layer is printed at the top, input at the bottom */
-    void print_weights() const
-    {
-        std::cout << std::setprecision(4) << std::fixed;
-        for (int i = layers_total - 2; i >= 0; --i) {
-            for (int j = 0; j < _layers[i]._weights_in.col_num(); ++j) {
-                std::cout << "[ ";
-                for (int k = 0; k < _layers[i]._weights_in.row_num(); ++k) {
-                    std::cout << _layers[i]._weights_in[k][j] << " ";
-                }
-                std::cout << "] ";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "\n";
-    }
-
-    /**
-     * Prints values of all neurons, one layer a line
-     * Output layer is printed at the top, input at the bottom
-     */
-    void print_neurons()
-    {
-        std::cout << std::setprecision(4) << std::fixed;
-        for (int i = layers_total - 2; i >= 0; --i) {
-            for (const auto& neuron_vec: _layers[i].get_outputs()) {
-                std::cout << "[";
-                for (int j = 0; j < neuron_vec.size(); ++j) {
-                    std::cout << neuron_vec[j];
-                    if (j != neuron_vec.size() - 1) {
-                        std:: cout << " | ";
-                    }
-                }
-                std::cout << "]  ";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "\n";
-    }
-
     ~NeuralNetwork() {
         if (_training_output_file.is_open()) { _training_output_file.close(); }
     }
 };
-
 
 #endif //NEURAL_NETWORK_H

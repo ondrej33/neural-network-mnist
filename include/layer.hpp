@@ -53,7 +53,7 @@ struct Layer
           _cached_biases(num_neurons),
           _activation_fn(fn)
     {
-        // TODO: initialize biases? - zero initialization should be ok
+        // zero initialization for biases should be ok
         
         // initiate weights - we use some kind of Xavier initialization for now
         std::normal_distribution<float> distribution(0.0, 1.0 / num_neurons);  // values have to be 0.0 and 1.0 (not 0 and 1)
@@ -76,10 +76,8 @@ struct Layer
      * input vector contains outputs from prev layer and we use them to compute our outputs */
     void forward(const FloatMat& input_batch)
     {
-        // first compute inner potential
         _inner_potential = std::move((input_batch * _weights_in).add_vec_to_all_rows(_biases));
-
-        // now compute output values 
+        
         _output_values = _inner_potential;
         _activation_fn.apply_activation(_output_values);
     }
@@ -100,8 +98,8 @@ struct Layer
                 }
             }
         }
-        // just an alias for easier understanding
-        FloatMat& received_vals = deriv_inputs_next_layer;
+
+        FloatMat& received_vals = deriv_inputs_next_layer; // just an alias for easier understanding
         
         // TODO: optimize
         _deriv_weights = std::move(outputs_prev_layer.transpose() * received_vals);
