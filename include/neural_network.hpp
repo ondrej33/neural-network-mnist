@@ -77,9 +77,9 @@ public:
         _layers.push_back(Layer<batch_size>(_topology[layers_total - 1], _topology[layers_total - 2], soft_fn, generator));
 
         // load the train data
-        _train_data = std::move(load_vectors_labels(vector_file, label_file, _topology[0]));
+        _train_data = std::move(load_vectors_labels(train_vectors, train_labels, _topology[0]));
         _train_data_copy = _train_data;
-        _training_output_file.open(output);
+        _training_output_file.open(train_output);
     }
 
     int classes_num() const { return _topology[layers_total - 1]; }
