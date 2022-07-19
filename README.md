@@ -7,3 +7,5 @@ The code is written in C++ 17 without using any 3rd party library - everything i
 Network is trained using batch version of SGD with Adam optimizer and learning rate decay.
 
 This was a semestral project for the class PV021 Neural Networks at the FI MU.
+
+To successfully run the program, you must add a *data* folder with actual train+test data and label CSV files. These are too large to be saved in github repo.
