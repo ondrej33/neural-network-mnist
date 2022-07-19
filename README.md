@@ -9,3 +9,4 @@ Network is trained using batch version of SGD with Adam optimizer and learning r
 This was a semestral project for the class PV021 Neural Networks at the FI MU.
 
 To successfully run the program, you must add a *data* folder with actual train+test data and label CSV files. These are too large to be saved in github repo.
+To evaluate the achieved results, use the evaluator script in *python_evaluator* directory.
