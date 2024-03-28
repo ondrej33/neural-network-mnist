@@ -1,4 +1,4 @@
-# Feed forward Neural network from scratch
+# Feed-forward neural network from scratch
 
 This is a feed-forward neural network made from scratch in C++, designed to tackle MNIST and FashionMNIST datasets. The datasets consist of thousands of pictures - either of handwritten digits, or product pictures of clothing from the Zalando catalogue. The network achieves an accuracy of over 88% on FashionMNIST after just a few minutes of training.
 
